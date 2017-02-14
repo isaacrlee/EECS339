@@ -1,0 +1,19 @@
+This directory contains tools to create the geolocation tables in the 
+database, which map from committees, candidates, and individuals to 
+their longitude and latitude.   These tables are created after
+the FEC tables are created and populated.
+
+To create the tables:
+
+sqlplus cs339/passwd @setup.sql
+
+To populate the tables:
+
+./geolocate.pl
+
+This can take a long time.  About a day on our hardware in Fall 2012.
+
+You can drop the tables via
+
+sqlplus cs339/passwd @drop.sql
+
