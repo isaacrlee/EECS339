@@ -392,6 +392,11 @@ if ($action eq "base") {
 
 }
 
+# checkboxes for committee, candidate, and/or individual
+print "<label>Committees: <input type='checkbox' name='filter' value='committees'></label></br>";
+print "<label>Candidate: <input type='checkbox' value='candidate'></label></br>";
+print "<label>Individual: <input type='checkbox' value='individual'></label>";
+
 #
 #
 # NEAR
@@ -713,7 +718,7 @@ sub Committees {
   my ($latne,$longne,$latsw,$longsw,$cycle,$format) = @_;
   my @rows;
   eval { 
-    @rows = ExecSQL($dbuser, $dbpasswd, "select latitude, longitude, cmte_nm, cmte_pty_affiliation, cmte_st1, cmte_st2, cmte_city, cmte_st, cmte_zip from cs339.committee_master natural join cs339.cmte_id_to_geo where cycle=? and latitude>? and latitude<? and longitude>? and longitude<?",undef,$cycle,$latsw,$latne,$longsw,$longne);
+    @rows = ExecSQL($dbuser, $dbpasswd, "select latitude, longitude, cmte_nm, cmte_pty_affiliation, cmte_st1, cmte_st2, cmte_city, cmte_st, cmte_zip, cycle from cs339.committee_master natural join cs339.cmte_id_to_geo where cycle=? and latitude>? and latitude<? and longitude>? and longitude<?",undef,$cycle,$latsw,$latne,$longsw,$longne);
   };
   
   if ($@) { 
@@ -721,7 +726,7 @@ sub Committees {
   } else {
     if ($format eq "table") { 
       return (MakeTable("committee_data","2D",
-			["latitude", "longitude", "name", "party", "street1", "street2", "city", "state", "zip"],
+			["latitude", "longitude", "name", "party", "street1", "street2", "city", "state", "zip", "cycle"],
 			@rows),$@);
     } else {
       return (MakeRaw("committee_data","2D",@rows),$@);

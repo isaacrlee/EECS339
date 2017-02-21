@@ -31,7 +31,7 @@ $(document).ready(function() {
 });
 
 // Global variables
-var map, usermark, markers = [],
+var map, usermark, markers, what = [],
 
 // UpdateMapById draws markers of a given category (id)
 // onto the map using the data for that id stashed within 
@@ -98,9 +98,9 @@ UpdateMap = function() {
 // commented out...  Those might help with the project...
 //
 	UpdateMapById("committee_data","COMMITTEE");
-	//UpdateMapById("candidate_data","CANDIDATE");
-	//UpdateMapById("individual_data", "INDIVIDUAL");
-	//UpdateMapById("opinion_data","OPINION");
+	UpdateMapById("candidate_data","CANDIDATE");
+	UpdateMapById("individual_data", "INDIVIDUAL");
+	UpdateMapById("opinion_data","OPINION");
 
 // When we're done with the map update, we mark the color division as
 // Ready.
@@ -128,6 +128,19 @@ NewData = function(data) {
 // Now that the new data is in the document, we use it to
 // update the map
 	UpdateMap();
+},
+
+// NEW FUNCTION GetChecked returns values from checkboxes for what parameter
+GetChecked = function() {
+	$.each($("input[name='filter']:checked"), function(){
+		var val = $(this).val();
+		console.log(val);
+		if (what.indexOf(val) > -1) {
+			what.push(val);
+		}
+    });
+    console.log(what)
+    return what.join(',');
 },
 
 //
@@ -161,7 +174,7 @@ ViewShift = function() {
 			latsw:	sw.lat(),
 			longsw:	sw.lng(),
 			format:	"raw",
-			what:	"committees,candidates"
+			what:	GetChecked
 		}, NewData);
 },
 
