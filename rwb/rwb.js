@@ -31,7 +31,8 @@ $(document).ready(function() {
 });
 
 // Global variables
-var map, usermark, markers, what = [],
+var map, usermark, markers = [];
+var whatparam = ['committees'];
 
 // UpdateMapById draws markers of a given category (id)
 // onto the map using the data for that id stashed within 
@@ -174,7 +175,7 @@ ViewShift = function() {
 			latsw:	sw.lat(),
 			longsw:	sw.lng(),
 			format:	"raw",
-			what:	GetChecked
+			what:	whatparam.join(',')
 		}, NewData);
 },
 

@@ -394,8 +394,8 @@ if ($action eq "base") {
 
 # checkboxes for committee, candidate, and/or individual
 print "<label>Committees: <input type='checkbox' name='filter' value='committees'></label></br>";
-print "<label>Candidate: <input type='checkbox' value='candidate'></label></br>";
-print "<label>Individual: <input type='checkbox' value='individual'></label>";
+print "<label>Candidate: <input type='checkbox' value='candidates'></label></br>";
+print "<label>Individual: <input type='checkbox' value='individuals'></label>";
 
 #
 #
