@@ -32,7 +32,7 @@ $(document).ready(function() {
 
 // Global variables
 var map, usermark, markers = [];
-var whatparam = ['committees'];
+var whatparam = '';
 
 // UpdateMapById draws markers of a given category (id)
 // onto the map using the data for that id stashed within 
@@ -98,6 +98,7 @@ UpdateMap = function() {
 // Note that there additional categories here that are 
 // commented out...  Those might help with the project...
 //
+	whatparam = GetChecked;
 	UpdateMapById("committee_data","COMMITTEE");
 	UpdateMapById("candidate_data","CANDIDATE");
 	UpdateMapById("individual_data", "INDIVIDUAL");
@@ -132,15 +133,12 @@ NewData = function(data) {
 },
 
 // NEW FUNCTION GetChecked returns values from checkboxes for what parameter
-GetChecked = function() {
+GetChecked = function () {
+	var what = []
 	$.each($("input[name='filter']:checked"), function(){
 		var val = $(this).val();
-		console.log(val);
-		if (what.indexOf(val) > -1) {
-			what.push(val);
-		}
+		what.push(val);
     });
-    console.log(what)
     return what.join(',');
 },
 
@@ -175,7 +173,7 @@ ViewShift = function() {
 			latsw:	sw.lat(),
 			longsw:	sw.lng(),
 			format:	"raw",
-			what:	whatparam.join(',')
+			what:	whatparam
 		}, NewData);
 },
 

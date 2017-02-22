@@ -125,27 +125,27 @@ if (defined(param("act"))) {
   $action=param("act");
   if (defined(param("run"))) { 
     $run = param("run") == 1;
-  } else {
-    $run = 0;
-  }
-} else {
-  $action="base";
-  $run = 1;
-}
+    } else {
+      $run = 0;
+    }
+    } else {
+      $action="base";
+      $run = 1;
+    }
 
-my $dstr;
+    my $dstr;
 
-if (defined(param("debug"))) { 
+    if (defined(param("debug"))) { 
   # parameter has priority over cookie
   if (param("debug") == 0) { 
     $debug = 0;
-  } else {
-    $debug = 1;
-  }
-} else {
-  if (defined($inputdebugcookiecontent)) { 
-    $debug = $inputdebugcookiecontent;
-  } else {
+    } else {
+      $debug = 1;
+    }
+    } else {
+      if (defined($inputdebugcookiecontent)) { 
+        $debug = $inputdebugcookiecontent;
+        } else {
     # debug default from script
   }
 }
@@ -161,7 +161,7 @@ if (defined($inputcookiecontent)) {
   # Has cookie, let's decode it
   ($user,$password) = split(/\//,$inputcookiecontent);
   $outputcookiecontent = $inputcookiecontent;
-} else {
+  } else {
   # No cookie, treat as anonymous user
   ($user,$password) = ("anon","anonanon");
 }
@@ -188,14 +188,14 @@ if ($action eq "login") {
       $outputcookiecontent=join("/",$user,$password);
       $action = "base";
       $run = 1;
-    } else {
+      } else {
       # uh oh.  Bogus login attempt.  Make him try again.
       # don't give him a cookie
       $logincomplain=1;
       $action="login";
       $run = 0;
     }
-  } else {
+    } else {
     #
     # Just a login screen request, but we should toss out any cookie
     # we were given
@@ -231,8 +231,8 @@ my @outputcookies;
 #
 if (defined($outputcookiecontent)) { 
   my $cookie=cookie(-name=>$cookiename,
-		    -value=>$outputcookiecontent,
-		    -expires=>($deletecookie ? '-1h' : '+1h'));
+    -value=>$outputcookiecontent,
+    -expires=>($deletecookie ? '-1h' : '+1h'));
   push @outputcookies, $cookie;
 } 
 #
@@ -241,7 +241,7 @@ if (defined($outputcookiecontent)) {
 #
 if (defined($outputdebugcookiecontent)) { 
   my $cookie=cookie(-name=>$debugcookiename,
-		    -value=>$outputdebugcookiecontent);
+    -value=>$outputdebugcookiecontent);
   push @outputcookies, $cookie;
 }
 
@@ -274,7 +274,7 @@ print "<body style=\"height:100\%;margin:0\">";
 # defined in the css file
 #
 print "<style type=\"text/css\">\n\@import \"rwb.css\";\n</style>\n";
-  
+
 
 print "<center>" if !$debug;
 
@@ -300,13 +300,13 @@ if ($action eq "login") {
   } 
   if ($logincomplain or !$run) { 
     print start_form(-name=>'Login'),
-      h2('Login to Red, White, and Blue'),
-	"Name:",textfield(-name=>'user'),	p,
-	  "Password:",password_field(-name=>'password'),p,
-	    hidden(-name=>'act',default=>['login']),
-	      hidden(-name=>'run',default=>['1']),
-		submit,
-		  end_form;
+    h2('Login to Red, White, and Blue'),
+    "Name:",textfield(-name=>'user'),	p,
+    "Password:",password_field(-name=>'password'),p,
+    hidden(-name=>'act',default=>['login']),
+    hidden(-name=>'run',default=>['1']),
+    submit,
+    end_form;
   }
 }
 
@@ -353,14 +353,14 @@ if ($action eq "base") {
   if ($debug) {
     # visible if we are debugging
     print "<div id=\"data\" style=\:width:100\%; height:10\%\"></div>";
-  } else {
+    } else {
     # invisible otherwise
     print "<div id=\"data\" style=\"display: none;\"></div>";
   }
 
 
 # height=1024 width=1024 id=\"info\" name=\"info\" onload=\"UpdateMap()\"></iframe>";
-  
+
 
   #
   # User mods
@@ -368,34 +368,36 @@ if ($action eq "base") {
   #
   if ($user eq "anon") {
     print "<p>You are anonymous, but you can also <a href=\"rwb.pl?act=login\">login</a></p>";
-  } else {
-    print "<p>You are logged in as $user and can do the following:</p>";
-    if (UserCan($user,"give-opinion-data")) {
-      print "<p><a href=\"rwb.pl?act=give-opinion-data\">Give Opinion Of Current Location</a></p>";
+    } else {
+      print "<p>You are logged in as $user and can do the following:</p>";
+      if (UserCan($user,"give-opinion-data")) {
+        print "<p><a href=\"rwb.pl?act=give-opinion-data\">Give Opinion Of Current Location</a></p>";
+      }
+      if (UserCan($user,"give-cs-ind-data")) {
+        print "<p><a href=\"rwb.pl?act=give-cs-ind-data\">Geolocate Individual Contributors</a></p>";
+      }
+      if (UserCan($user,"manage-users") || UserCan($user,"invite-users")) {
+        print "<p><a href=\"rwb.pl?act=invite-user\">Invite User</a></p>";
+      }
+      if (UserCan($user,"manage-users") || UserCan($user,"add-users")) { 
+        print "<p><a href=\"rwb.pl?act=add-user\">Add User</a></p>";
+      } 
+      if (UserCan($user,"manage-users")) { 
+        print "<p><a href=\"rwb.pl?act=delete-user\">Delete User</a></p>";
+        print "<p><a href=\"rwb.pl?act=add-perm-user\">Add User Permission</a></p>";
+        print "<p><a href=\"rwb.pl?act=revoke-perm-user\">Revoke User Permission</a></p>";
+      }
+      print "<p><a href=\"rwb.pl?act=logout&run=1\">Logout</a></p>";
     }
-    if (UserCan($user,"give-cs-ind-data")) {
-      print "<p><a href=\"rwb.pl?act=give-cs-ind-data\">Geolocate Individual Contributors</a></p>";
-    }
-    if (UserCan($user,"manage-users") || UserCan($user,"invite-users")) {
-      print "<p><a href=\"rwb.pl?act=invite-user\">Invite User</a></p>";
-    }
-    if (UserCan($user,"manage-users") || UserCan($user,"add-users")) { 
-      print "<p><a href=\"rwb.pl?act=add-user\">Add User</a></p>";
-    } 
-    if (UserCan($user,"manage-users")) { 
-      print "<p><a href=\"rwb.pl?act=delete-user\">Delete User</a></p>";
-      print "<p><a href=\"rwb.pl?act=add-perm-user\">Add User Permission</a></p>";
-      print "<p><a href=\"rwb.pl?act=revoke-perm-user\">Revoke User Permission</a></p>";
-    }
-    print "<p><a href=\"rwb.pl?act=logout&run=1\">Logout</a></p>";
+
   }
 
-}
-
-# checkboxes for committee, candidate, and/or individual
-print "<label>Committees: <input type='checkbox' name='filter' value='committees'></label></br>";
-print "<label>Candidate: <input type='checkbox' value='candidates'></label></br>";
-print "<label>Individual: <input type='checkbox' value='individuals'></label>";
+# sub PrintChecks {
+#   my $whatparam = @_;
+#   my $committees = 
+#   my $candidatess = 
+#   my $individuals = 
+# }
 
 #
 #
@@ -413,6 +415,11 @@ print "<label>Individual: <input type='checkbox' value='individuals'></label>";
 #
 #
 if ($action eq "near") {
+  # checkboxes for committee, candidate, and/or individual
+  print "<label>Committees: <input type='checkbox' name='filter' value='committees'></label></br>";
+  print "<label>Candidates: <input type='checkbox' name='filter' value='candidates'></label></br>";
+  print "<label>Individuals: <input type='checkbox' name='filter' value='individuals'></label>";
+
   my $latne = param("latne");
   my $longne = param("longne");
   my $latsw = param("latsw");
@@ -427,68 +434,68 @@ if ($action eq "near") {
 
   if (!defined($whatparam) || $whatparam eq "all") { 
     %what = ( committees => 1, 
-	      candidates => 1,
-	      individuals =>1,
-	      opinions => 1);
-  } else {
-    map {$what{$_}=1} split(/\s*,\s*/,$whatparam);
-  }
-	       
-
-  if ($what{committees}) { 
-    my ($str,$error) = Committees($latne,$longne,$latsw,$longsw,$cycle,$format);
-    if (!$error) {
-      if ($format eq "table") { 
-	print "<h2>Nearby committees</h2>$str";
-      } else {
-	print $str;
-      }
+     candidates => 1,
+     individuals =>1,
+     opinions => 1);
+    } else {
+      map {$what{$_}=1} split(/\s*,\s*/,$whatparam);
     }
-  }
-  if ($what{candidates}) {
-    my ($str,$error) = Candidates($latne,$longne,$latsw,$longsw,$cycle,$format);
-    if (!$error) {
-      if ($format eq "table") { 
-	print "<h2>Nearby candidates</h2>$str";
-      } else {
-	print $str;
-      }
-    }
-  }
-  if ($what{individuals}) {
-    my ($str,$error) = Individuals($latne,$longne,$latsw,$longsw,$cycle,$format);
-    if (!$error) {
-      if ($format eq "table") { 
-	print "<h2>Nearby individuals</h2>$str";
-      } else {
-	print $str;
-      }
-    }
-  }
-  if ($what{opinions}) {
-    my ($str,$error) = Opinions($latne,$longne,$latsw,$longsw,$cycle,$format);
-    if (!$error) {
-      if ($format eq "table") { 
-	print "<h2>Nearby opinions</h2>$str";
-      } else {
-	print $str;
-      }
-    }
-  }
-}
 
 
-if ($action eq "invite-user") { 
-  print h2("Invite User Functionality Is Unimplemented");
-}
+    if ($what{committees}) { 
+      my ($str,$error) = Committees($latne,$longne,$latsw,$longsw,$cycle,$format);
+      if (!$error) {
+        if ($format eq "table") { 
+         print "<h2>Nearby committees</h2>$str";
+         } else {
+           print $str;
+         }
+       }
+     }
+     if ($what{candidates}) {
+      my ($str,$error) = Candidates($latne,$longne,$latsw,$longsw,$cycle,$format);
+      if (!$error) {
+        if ($format eq "table") { 
+         print "<h2>Nearby candidates</h2>$str";
+         } else {
+           print $str;
+         }
+       }
+     }
+     if ($what{individuals}) {
+      my ($str,$error) = Individuals($latne,$longne,$latsw,$longsw,$cycle,$format);
+      if (!$error) {
+        if ($format eq "table") { 
+         print "<h2>Nearby individuals</h2>$str";
+         } else {
+           print $str;
+         }
+       }
+     }
+     if ($what{opinions}) {
+      my ($str,$error) = Opinions($latne,$longne,$latsw,$longsw,$cycle,$format);
+      if (!$error) {
+        if ($format eq "table") { 
+         print "<h2>Nearby opinions</h2>$str";
+         } else {
+           print $str;
+         }
+       }
+     }
+   }
 
-if ($action eq "give-opinion-data") { 
-  print h2("Giving Location Opinion Data Is Unimplemented");
-}
 
-if ($action eq "give-cs-ind-data") { 
-  print h2("Giving Crowd-sourced Individual Geolocations Is Unimplemented");
-}
+   if ($action eq "invite-user") { 
+    print h2("Invite User Functionality Is Unimplemented");
+  }
+
+  if ($action eq "give-opinion-data") { 
+    print h2("Giving Location Opinion Data Is Unimplemented");
+  }
+
+  if ($action eq "give-cs-ind-data") { 
+    print h2("Giving Crowd-sourced Individual Geolocations Is Unimplemented");
+  }
 
 #
 # ADD-USER
@@ -501,36 +508,36 @@ if ($action eq "give-cs-ind-data") {
 if ($action eq "add-user") { 
   if (!UserCan($user,"add-users") && !UserCan($user,"manage-users")) { 
     print h2('You do not have the required permissions to add users.');
-  } else {
-    if (!$run) { 
-      print start_form(-name=>'AddUser'),
-	h2('Add User'),
-	  "Name: ", textfield(-name=>'name'),
-	    p,
-	      "Email: ", textfield(-name=>'email'),
-		p,
-		  "Password: ", textfield(-name=>'password'),
-		    p,
-		      hidden(-name=>'run',-default=>['1']),
-			hidden(-name=>'act',-default=>['add-user']),
-			  submit,
-			    end_form,
-			      hr;
     } else {
-      my $name=param('name');
-      my $email=param('email');
-      my $password=param('password');
-      my $error;
-      $error=UserAdd($name,$password,$email,$user);
-      if ($error) { 
-	print "Can't add user because: $error";
-      } else {
-	print "Added user $name $email as referred by $user\n";
-      }
-    }
-  }
-  print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
-}
+      if (!$run) { 
+        print start_form(-name=>'AddUser'),
+        h2('Add User'),
+        "Name: ", textfield(-name=>'name'),
+        p,
+        "Email: ", textfield(-name=>'email'),
+        p,
+        "Password: ", textfield(-name=>'password'),
+        p,
+        hidden(-name=>'run',-default=>['1']),
+        hidden(-name=>'act',-default=>['add-user']),
+        submit,
+        end_form,
+        hr;
+        } else {
+          my $name=param('name');
+          my $email=param('email');
+          my $password=param('password');
+          my $error;
+          $error=UserAdd($name,$password,$email,$user);
+          if ($error) { 
+           print "Can't add user because: $error";
+           } else {
+             print "Added user $name $email as referred by $user\n";
+           }
+         }
+       }
+       print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
+     }
 
 #
 # DELETE-USER
@@ -543,33 +550,33 @@ if ($action eq "add-user") {
 if ($action eq "delete-user") { 
   if (!UserCan($user,"manage-users")) { 
     print h2('You do not have the required permissions to delete users.');
-  } else {
-    if (!$run) { 
+    } else {
+      if (!$run) { 
       #
       # Generate the add form.
       #
       print start_form(-name=>'DeleteUser'),
-	h2('Delete User'),
-	  "Name: ", textfield(-name=>'name'),
-	    p,
-	      hidden(-name=>'run',-default=>['1']),
-		hidden(-name=>'act',-default=>['delete-user']),
-		  submit,
-		    end_form,
-		      hr;
-    } else {
-      my $name=param('name');
-      my $error;
-      $error=UserDel($name);
-      if ($error) { 
-	print "Can't delete user because: $error";
+      h2('Delete User'),
+      "Name: ", textfield(-name=>'name'),
+      p,
+      hidden(-name=>'run',-default=>['1']),
+      hidden(-name=>'act',-default=>['delete-user']),
+      submit,
+      end_form,
+      hr;
       } else {
-	print "Deleted user $name\n";
-      }
-    }
-  }
-  print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
-}
+        my $name=param('name');
+        my $error;
+        $error=UserDel($name);
+        if ($error) { 
+         print "Can't delete user because: $error";
+         } else {
+           print "Deleted user $name\n";
+         }
+       }
+     }
+     print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
+   }
 
 
 #
@@ -583,39 +590,39 @@ if ($action eq "delete-user") {
 if ($action eq "add-perm-user") { 
   if (!UserCan($user,"manage-users")) { 
     print h2('You do not have the required permissions to manage user permissions.');
-  } else {
-    if (!$run) { 
+    } else {
+      if (!$run) { 
       #
       # Generate the add form.
       #
       print start_form(-name=>'AddUserPerm'),
-	h2('Add User Permission'),
-	  "Name: ", textfield(-name=>'name'),
-	    "Permission: ", textfield(-name=>'permission'),
-	      p,
-		hidden(-name=>'run',-default=>['1']),
-		  hidden(-name=>'act',-default=>['add-perm-user']),
-		  submit,
-		    end_form,
-		      hr;
+      h2('Add User Permission'),
+      "Name: ", textfield(-name=>'name'),
+      "Permission: ", textfield(-name=>'permission'),
+      p,
+      hidden(-name=>'run',-default=>['1']),
+      hidden(-name=>'act',-default=>['add-perm-user']),
+      submit,
+      end_form,
+      hr;
       my ($table,$error);
       ($table,$error)=PermTable();
       if (!$error) { 
-	print "<h2>Available Permissions</h2>$table";
-      }
-    } else {
+       print "<h2>Available Permissions</h2>$table";
+     }
+     } else {
       my $name=param('name');
       my $perm=param('permission');
       my $error=GiveUserPerm($name,$perm);
       if ($error) { 
-	print "Can't add permission to user because: $error";
-      } else {
-	print "Gave user $name permission $perm\n";
-      }
-    }
-  }
-  print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
-}
+       print "Can't add permission to user because: $error";
+       } else {
+         print "Gave user $name permission $perm\n";
+       }
+     }
+   }
+   print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
+ }
 
 
 #
@@ -629,39 +636,39 @@ if ($action eq "add-perm-user") {
 if ($action eq "revoke-perm-user") { 
   if (!UserCan($user,"manage-users")) { 
     print h2('You do not have the required permissions to manage user permissions.');
-  } else {
-    if (!$run) { 
+    } else {
+      if (!$run) { 
       #
       # Generate the add form.
       #
       print start_form(-name=>'RevokeUserPerm'),
-	h2('Revoke User Permission'),
-	  "Name: ", textfield(-name=>'name'),
-	    "Permission: ", textfield(-name=>'permission'),
-	      p,
-		hidden(-name=>'run',-default=>['1']),
-		  hidden(-name=>'act',-default=>['revoke-perm-user']),
-		  submit,
-		    end_form,
-		      hr;
+      h2('Revoke User Permission'),
+      "Name: ", textfield(-name=>'name'),
+      "Permission: ", textfield(-name=>'permission'),
+      p,
+      hidden(-name=>'run',-default=>['1']),
+      hidden(-name=>'act',-default=>['revoke-perm-user']),
+      submit,
+      end_form,
+      hr;
       my ($table,$error);
       ($table,$error)=PermTable();
       if (!$error) { 
-	print "<h2>Available Permissions</h2>$table";
-      }
-    } else {
+       print "<h2>Available Permissions</h2>$table";
+     }
+     } else {
       my $name=param('name');
       my $perm=param('permission');
       my $error=RevokeUserPerm($name,$perm);
       if ($error) { 
-	print "Can't revoke permission from user because: $error";
-      } else {
-	print "Revoked user $name permission $perm\n";
-      }
-    }
-  }
-  print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
-}
+       print "Can't revoke permission from user because: $error";
+       } else {
+         print "Revoked user $name permission $perm\n";
+       }
+     }
+   }
+   print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
+ }
 
 
 
@@ -718,21 +725,21 @@ sub Committees {
   my ($latne,$longne,$latsw,$longsw,$cycle,$format) = @_;
   my @rows;
   eval { 
-    @rows = ExecSQL($dbuser, $dbpasswd, "select latitude, longitude, cmte_nm, cmte_pty_affiliation, cmte_st1, cmte_st2, cmte_city, cmte_st, cmte_zip, cycle from cs339.committee_master natural join cs339.cmte_id_to_geo where cycle=? and latitude>? and latitude<? and longitude>? and longitude<?",undef,$cycle,$latsw,$latne,$longsw,$longne);
+    @rows = ExecSQL($dbuser, $dbpasswd, "select latitude, longitude, cmte_nm, cmte_pty_affiliation, cmte_st1, cmte_st2, cmte_city, cmte_st, cmte_zip from cs339.committee_master natural join cs339.cmte_id_to_geo where cycle=? and latitude>? and latitude<? and longitude>? and longitude<?",undef,$cycle,$latsw,$latne,$longsw,$longne);
   };
   
   if ($@) { 
     return (undef,$@);
-  } else {
-    if ($format eq "table") { 
-      return (MakeTable("committee_data","2D",
-			["latitude", "longitude", "name", "party", "street1", "street2", "city", "state", "zip", "cycle"],
-			@rows),$@);
     } else {
-      return (MakeRaw("committee_data","2D",@rows),$@);
+      if ($format eq "table") { 
+        return (MakeTable("committee_data","2D",
+         ["latitude", "longitude", "name", "party", "street1", "street2", "city", "state", "zip"],
+         @rows),$@);
+        } else {
+          return (MakeRaw("committee_data","2D",@rows),$@);
+        }
+      }
     }
-  }
-}
 
 
 #
@@ -749,16 +756,16 @@ sub Candidates {
   
   if ($@) { 
     return (undef,$@);
-  } else {
-    if ($format eq "table") {
-      return (MakeTable("candidate_data", "2D",
-			["latitude", "longitude", "name", "party", "street1", "street2", "city", "state", "zip"],
-			@rows),$@);
     } else {
-      return (MakeRaw("candidate_data","2D",@rows),$@);
+      if ($format eq "table") {
+        return (MakeTable("candidate_data", "2D",
+         ["latitude", "longitude", "name", "party", "street1", "street2", "city", "state", "zip"],
+         @rows),$@);
+        } else {
+          return (MakeRaw("candidate_data","2D",@rows),$@);
+        }
+      }
     }
-  }
-}
 
 
 #
@@ -778,16 +785,16 @@ sub Individuals {
   
   if ($@) { 
     return (undef,$@);
-  } else {
-    if ($format eq "table") { 
-      return (MakeTable("individual_data", "2D",
-			["latitude", "longitude", "name", "city", "state", "zip", "employer", "amount"],
-			@rows),$@);
     } else {
-      return (MakeRaw("individual_data","2D",@rows),$@);
+      if ($format eq "table") { 
+        return (MakeTable("individual_data", "2D",
+         ["latitude", "longitude", "name", "city", "state", "zip", "employer", "amount"],
+         @rows),$@);
+        } else {
+          return (MakeRaw("individual_data","2D",@rows),$@);
+        }
+      }
     }
-  }
-}
 
 
 #
@@ -805,16 +812,16 @@ sub Opinions {
   
   if ($@) { 
     return (undef,$@);
-  } else {
-    if ($format eq "table") { 
-      return (MakeTable("opinion_data","2D",
-			["latitude", "longitude", "name", "city", "state", "zip", "employer", "amount"],
-			@rows),$@);
     } else {
-      return (MakeRaw("opinion_data","2D",@rows),$@);
+      if ($format eq "table") { 
+        return (MakeTable("opinion_data","2D",
+         ["latitude", "longitude", "name", "city", "state", "zip", "employer", "amount"],
+         @rows),$@);
+        } else {
+          return (MakeRaw("opinion_data","2D",@rows),$@);
+        }
+      }
     }
-  }
-}
 
 
 #
@@ -827,13 +834,13 @@ sub PermTable {
   eval { @rows = ExecSQL($dbuser, $dbpasswd, "select action from rwb_actions"); }; 
   if ($@) { 
     return (undef,$@);
-  } else {
-    return (MakeTable("perm_table",
-		      "2D",
-		     ["Perm"],
-		     @rows),$@);
+    } else {
+      return (MakeTable("perm_table",
+        "2D",
+        ["Perm"],
+        @rows),$@);
+    }
   }
-}
 
 #
 # Generate a table of users
@@ -845,13 +852,13 @@ sub UserTable {
   eval { @rows = ExecSQL($dbuser, $dbpasswd, "select name, email from rwb_users order by name"); }; 
   if ($@) { 
     return (undef,$@);
-  } else {
-    return (MakeTable("user_table",
-		      "2D",
-		     ["Name", "Email"],
-		     @rows),$@);
+    } else {
+      return (MakeTable("user_table",
+        "2D",
+        ["Name", "Email"],
+        @rows),$@);
+    }
   }
-}
 
 #
 # Generate a table of users and their permissions
@@ -863,13 +870,13 @@ sub UserPermTable {
   eval { @rows = ExecSQL($dbuser, $dbpasswd, "select rwb_users.name, rwb_permissions.action from rwb_users, rwb_permissions where rwb_users.name=rwb_permissions.name order by rwb_users.name"); }; 
   if ($@) { 
     return (undef,$@);
-  } else {
-    return (MakeTable("userperm_table",
-		      "2D",
-		     ["Name", "Permission"],
-		     @rows),$@);
+    } else {
+      return (MakeTable("userperm_table",
+        "2D",
+        ["Name", "Permission"],
+        @rows),$@);
+    }
   }
-}
 
 #
 # Add a user
@@ -881,7 +888,7 @@ sub UserPermTable {
 #
 sub UserAdd { 
   eval { ExecSQL($dbuser,$dbpasswd,
-		 "insert into rwb_users (name,password,email,referer) values (?,?,?,?)",undef,@_);};
+   "insert into rwb_users (name,password,email,referer) values (?,?,?,?)",undef,@_);};
   return $@;
 }
 
@@ -904,7 +911,7 @@ sub UserDel {
 #
 sub GiveUserPerm { 
   eval { ExecSQL($dbuser,$dbpasswd,
-		 "insert into rwb_permissions (name,action) values (?,?)",undef,@_);};
+   "insert into rwb_permissions (name,action) values (?,?)",undef,@_);};
   return $@;
 }
 
@@ -917,7 +924,7 @@ sub GiveUserPerm {
 #
 sub RevokeUserPerm { 
   eval { ExecSQL($dbuser,$dbpasswd,
-		 "delete from rwb_permissions where name=? and action=?",undef,@_);};
+   "delete from rwb_permissions where name=? and action=?",undef,@_);};
   return $@;
 }
 
@@ -934,10 +941,10 @@ sub ValidUser {
   eval {@col=ExecSQL($dbuser,$dbpasswd, "select count(*) from rwb_users where name=? and password=?","COL",$user,$password);};
   if ($@) { 
     return 0;
-  } else {
-    return $col[0]>0;
+    } else {
+      return $col[0]>0;
+    }
   }
-}
 
 
 #
@@ -952,10 +959,10 @@ sub UserCan {
   eval {@col= ExecSQL($dbuser,$dbpasswd, "select count(*) from rwb_permissions where name=? and action=?","COL",$user,$action);};
   if ($@) { 
     return 0;
-  } else {
-    return $col[0]>0;
+    } else {
+      return $col[0]>0;
+    }
   }
-}
 
 
 
@@ -1000,19 +1007,19 @@ sub MakeTable {
       # and return the modified list.  $_ is the current list member
       #
       $out.="<tr>".(map {defined($_) ? "<td>$_</td>" : "<td>(null)</td>" } @list)."</tr>";
-    } elsif ($type eq "COL") { 
+      } elsif ($type eq "COL") { 
       #
       # ditto for a single column
       #
       $out.=join("",map {defined($_) ? "<tr><td>$_</td></tr>" : "<tr><td>(null)</td></tr>"} @list);
-    } else { 
+      } else { 
       #
       # For a 2D table, it's a bit more complicated...
       #
       $out.= join("",map {"<tr>$_</tr>"} (map {join("",map {defined($_) ? "<td>$_</td>" : "<td>(null)</td>"} @{$_})} @list));
     }
     $out.="</table>";
-  } else {
+    } else {
     # if no header row or list, then just say none.
     $out.="(none)";
   }
@@ -1049,13 +1056,13 @@ sub MakeRaw {
     #
     $out.=join("\t",map { defined($_) ? $_ : "(null)" } @list);
     $out.="\n";
-  } elsif ($type eq "COL") { 
+    } elsif ($type eq "COL") { 
     #
     # ditto for a single column
     #
     $out.=join("\n",map { defined($_) ? $_ : "(null)" } @list);
     $out.="\n";
-  } else {
+    } else {
     #
     # For a 2D table
     #
