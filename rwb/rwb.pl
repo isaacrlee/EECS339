@@ -171,7 +171,7 @@ if (defined($inputcookiecontent)) {
 # Ignore cookies in this case.
 #
 if ($action eq "login") { 
-  if ($run) { 
+  if ($run) {
     #
     # Login attempt
     #
@@ -301,7 +301,7 @@ if ($action eq "login") {
   if ($logincomplain or !$run) { 
     print start_form(-name=>'Login'),
     h2('Login to Red, White, and Blue'),
-    "Name:",textfield(-name=>'user'),	p,
+    "Name:",textfield(-name=>'user'), p,
     "Password:",password_field(-name=>'password'),p,
     hidden(-name=>'act',default=>['login']),
     hidden(-name=>'run',default=>['1']),
@@ -392,13 +392,6 @@ if ($action eq "base") {
 
   }
 
-# sub PrintChecks {
-#   my $whatparam = @_;
-#   my $committees = 
-#   my $candidatess = 
-#   my $individuals = 
-# }
-
 #
 #
 # NEAR
@@ -414,11 +407,8 @@ if ($action eq "base") {
 # the client-side javascript will invoke it to get raw data for overlaying on the map
 #
 #
+
 if ($action eq "near") {
-  # checkboxes for committee, candidate, and/or individual
-  print "<label>Committees: <input type='checkbox' name='filter' value='committees'></label></br>";
-  print "<label>Candidates: <input type='checkbox' name='filter' value='candidates'></label></br>";
-  print "<label>Individuals: <input type='checkbox' name='filter' value='individuals'></label>";
 
   my $latne = param("latne");
   my $longne = param("longne");
@@ -484,10 +474,43 @@ if ($action eq "near") {
      }
    }
 
+   # if ($action eq 'send-invite') {
+   # 	print 'HELLO WORLD';
+   # 	my $mail_status = 'cat mail.txt | mail -s "This is a test!" isaacrlee@gmail';
+   # 	print $mail_status;
+   # }
 
-   if ($action eq "invite-user") { 
+
+   if ($action eq "invite-user") {
+   	print "<script src=\"http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js\" type=\"text/javascript\"></script>";
+   	print "<script type=\"text/javascript\" src=\"invite.js\"> </script>";
+
+    # `cat mail.txt | mail -s "This is a test!" isaacrlee@gmail`
+    # onClick of submit button, send invite to email in textfield
+    
+    # if ($email) {
+    # 	print "hello, ", $email, "!\n";
+    # }
+    # else {
+    # 	print start_form(-method=>'POST',
+    # 		-action=>'http://murphy.wot.eecs.northwestern.edu/~irl742/rwb/rwb.pl?act=invite-users',
+    # 		-enctype=>'text/plain');
+
+    # 	print textfield(-name=>'email',
+    # 		-value=>'you@email',
+    # 		-size=>50,
+    # 		-maxlength=>80);
+
+    # 	print submit(
+    # 		-name=>'send-invite',
+    # 		-value=>'Send Invite'
+    # 		);
+
+    # 	print end_form;
+    # }
+
     print h2("Invite User Functionality Is Unimplemented");
-  }
+}
 
   if ($action eq "give-opinion-data") { 
     print h2("Giving Location Opinion Data Is Unimplemented");
@@ -536,6 +559,40 @@ if ($action eq "add-user") {
            }
          }
        }
+       print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
+     }
+
+
+# REGISTER PAGE
+if ($action eq "register-user") { 
+  
+      if (!$run) { 
+        print start_form(-name=>'AddUser'),
+        h2('Add User'),
+        "Name: ", textfield(-name=>'name'),
+        p,
+        "Email: ", textfield(-name=>'email'),
+        p,
+        "Password: ", textfield(-name=>'password'),
+        p,
+        hidden(-name=>'run',-default=>['1']),
+        hidden(-name=>'act',-default=>['add-user']),
+        submit,
+        end_form,
+        hr;
+        } else {
+          my $name=param('name');
+          my $email=param('email');
+          my $password=param('password');
+          my $error;
+          $error=UserAdd($name,$password,$email,$user);
+          if ($error) { 
+           print "Can't add user because: $error";
+           } else {
+             print "Added user $name $email as referred by $user\n";
+           }
+         }
+       
        print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
      }
 

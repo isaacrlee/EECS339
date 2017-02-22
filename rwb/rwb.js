@@ -32,7 +32,6 @@ $(document).ready(function() {
 
 // Global variables
 var map, usermark, markers = [];
-var whatparam = '';
 
 // UpdateMapById draws markers of a given category (id)
 // onto the map using the data for that id stashed within 
@@ -98,7 +97,6 @@ UpdateMap = function() {
 // Note that there additional categories here that are 
 // commented out...  Those might help with the project...
 //
-	whatparam = GetChecked;
 	UpdateMapById("committee_data","COMMITTEE");
 	UpdateMapById("candidate_data","CANDIDATE");
 	UpdateMapById("individual_data", "INDIVIDUAL");
@@ -139,7 +137,15 @@ GetChecked = function () {
 		var val = $(this).val();
 		what.push(val);
     });
-    return what.join(',');
+    console.log(what.join(','));
+    return what.join(', ');
+},
+
+CreateBoxes = function () {
+	$('#map').after("<input type='button' value='Filter' onclick='Reposition()'>");
+	$('#map').after("<label>Individuals: <input type='checkbox' name='filter' value='individuals'></label></br>");
+	$('#map').after("<label>Candidates: <input type='checkbox' name='filter' value='candidates'></label></br>");
+	$('#map').after("<label>Committees: <input type='checkbox' name='filter' value='committees'></label></br>");
 },
 
 //
@@ -165,6 +171,7 @@ ViewShift = function() {
 // 
 // This *initiates* the request back to the server.  When it is done,
 // the browser will call us back at the function NewData (given above)
+	var whatparam = GetChecked;
 	$.get("rwb.pl",
 		{
 			act:	"near",
@@ -173,6 +180,7 @@ ViewShift = function() {
 			latsw:	sw.lat(),
 			longsw:	sw.lng(),
 			format:	"raw",
+			// what: 'committees, candidates'
 			what:	whatparam
 		}, NewData);
 },
@@ -239,6 +247,8 @@ Start = function(location) {
 	google.maps.event.addListener(map,"bounds_changed",ViewShift);
 	google.maps.event.addListener(map,"center_changed",ViewShift);
 	google.maps.event.addListener(map,"zoom_changed",ViewShift);
+
+	CreateBoxes();
 
 //
 // Finally, tell the browser that if the current location changes, it
