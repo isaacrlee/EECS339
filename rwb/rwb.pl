@@ -358,7 +358,11 @@ if ($action eq "base") {
     print "<div id=\"data\" style=\"display: none;\"></div>";
   }
 
-
+  # FOR GETTING ELECTION CYCLES
+  my ($str,$error) = Cycles("raw");
+  if (!$error) {  	
+  	print $str;
+  }
 # height=1024 width=1024 id=\"info\" name=\"info\" onload=\"UpdateMap()\"></iframe>";
 
 
@@ -409,7 +413,6 @@ if ($action eq "base") {
 #
 
 if ($action eq "near") {
-
   my $latne = param("latne");
   my $longne = param("longne");
   my $latsw = param("latsw");
@@ -474,51 +477,53 @@ if ($action eq "near") {
      }
    }
 
-   # if ($action eq 'send-invite') {
-   # 	print 'HELLO WORLD';
-   # 	my $mail_status = 'cat mail.txt | mail -s "This is a test!" isaacrlee@gmail';
-   # 	print $mail_status;
-   # }
+# INVITE-USER
 
+if ($action eq "invite-user") {
+	if (!$run) { 
+		print start_form(-name=>'InviteUser'),
+		h2('Invite User'),
+		"Name: ", textfield(-name=>'name'),
+		p,
+		"Email: ", textfield(-name=>'email'),
+		p,
+        # "Password: ", textfield(-name=>'password'),
+        # p,
+        hidden(-name=>'run',-default=>['1']),
+        hidden(-name=>'act',-default=>['add-user']),
+        submit,
+        end_form,
+        hr;
+        }
+        else {
+        	my $email=param('email');
+        	my $name=param('name');
+        	my $mail_status;
+        	$mail_status=InviteUser($email, $name);
+        	if ($mail_status) { 
+        		print "Can't invite user because: $mail_status";
+        		} else {
+        			print "Invited user $email as referred by $user\n";
+        		}
+        	}
 
-   if ($action eq "invite-user") {
-   	print "<script src=\"http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js\" type=\"text/javascript\"></script>";
-   	print "<script type=\"text/javascript\" src=\"invite.js\"> </script>";
+        	print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
 
-    # `cat mail.txt | mail -s "This is a test!" isaacrlee@gmail`
-    # onClick of submit button, send invite to email in textfield
-    
-    # if ($email) {
-    # 	print "hello, ", $email, "!\n";
-    # }
-    # else {
-    # 	print start_form(-method=>'POST',
-    # 		-action=>'http://murphy.wot.eecs.northwestern.edu/~irl742/rwb/rwb.pl?act=invite-users',
-    # 		-enctype=>'text/plain');
+        	print h2("Invite User Functionality Is implemented!");
+        }
 
-    # 	print textfield(-name=>'email',
-    # 		-value=>'you@email',
-    # 		-size=>50,
-    # 		-maxlength=>80);
+#GIVE-OPINION-DATE
 
-    # 	print submit(
-    # 		-name=>'send-invite',
-    # 		-value=>'Send Invite'
-    # 		);
-
-    # 	print end_form;
-    # }
-
-    print h2("Invite User Functionality Is Unimplemented");
+if ($action eq "give-opinion-data") { 
+	print h2("Giving Location Opinion Data Is Unimplemented");
 }
 
-  if ($action eq "give-opinion-data") { 
-    print h2("Giving Location Opinion Data Is Unimplemented");
-  }
+#GIVE-CS-IND-DATA
 
-  if ($action eq "give-cs-ind-data") { 
-    print h2("Giving Crowd-sourced Individual Geolocations Is Unimplemented");
-  }
+if ($action eq "give-cs-ind-data") { 
+	print h2("Giving Crowd-sourced Individual Geolocations Is Unimplemented");
+}
+
 
 #
 # ADD-USER
@@ -772,6 +777,33 @@ print end_html;
 # The remainder includes utilty and other functions
 #
 
+
+#NEW FUNCTION
+sub InviteUser { 
+	my ($email, $name) = @_;
+	my $mail_status = `cat mail.txt | mail -s "Hi $name, This is a test!" $email`;
+	return $mail_status;
+}
+
+sub Cycles {
+  my ($format) = @_;
+  my @rows;
+  eval { 
+    @rows = ExecSQL($dbuser, $dbpasswd, "select distinct cycle from cs339.committee_master natural join cs339.cmte_id_to_geo",undef);
+  };
+  
+  if ($@) { 
+    return (undef,$@);
+    } else {
+      if ($format eq "table") { 
+        return (MakeTable("cycle_data","2D",
+         ["cycle"],
+         @rows),$@);
+        } else {
+          return (MakeRaw("cycle_data","2D",@rows),$@);
+        }
+      }
+    }
 
 #
 # Generate a table of nearby committees

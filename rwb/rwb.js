@@ -97,10 +97,19 @@ UpdateMap = function() {
 // Note that there additional categories here that are 
 // commented out...  Those might help with the project...
 //
-	UpdateMapById("committee_data","COMMITTEE");
-	UpdateMapById("candidate_data","CANDIDATE");
-	UpdateMapById("individual_data", "INDIVIDUAL");
-	UpdateMapById("opinion_data","OPINION");
+	var whatparam = GetCheckedData();
+	if (whatparam.indexOf('committees') > -1) {
+		UpdateMapById("committee_data","COMMITTEE");	
+	}
+	if (whatparam.indexOf('candidates') > -1) {
+		UpdateMapById("candidate_data","CANDIDATE");
+	}
+	if (whatparam.indexOf('individuals') > -1) {
+		UpdateMapById("individual_data", "INDIVIDUAL");
+	}
+	// if (whatparam.indexOf('committees') > -1) {
+	// 	UpdateMapById("opinion_data","OPINION");
+	// }
 
 // When we're done with the map update, we mark the color division as
 // Ready.
@@ -131,22 +140,41 @@ NewData = function(data) {
 },
 
 // NEW FUNCTION GetChecked returns values from checkboxes for what parameter
-GetChecked = function () {
+GetCheckedData = function () {
 	var what = []
 	$.each($("input[name='filter']:checked"), function(){
 		var val = $(this).val();
 		what.push(val);
     });
-    console.log(what.join(','));
+    return what.join(', ');
+},
+
+GetCheckedCycles = function () {
+	var what = []
+	$.each($("input[name='cycles']:checked"), function(){
+		var val = $(this).val();
+		what.push(val);
+    });
     return what.join(', ');
 },
 
 CreateBoxes = function () {
-	$('#map').after("<input type='button' value='Filter' onclick='Reposition()'>");
+	$('#map').after("<input type='button' value='Filter' onclick='ViewShift()'>");
 	$('#map').after("<label>Individuals: <input type='checkbox' name='filter' value='individuals'></label></br>");
 	$('#map').after("<label>Candidates: <input type='checkbox' name='filter' value='candidates'></label></br>");
 	$('#map').after("<label>Committees: <input type='checkbox' name='filter' value='committees'></label></br>");
 },
+
+CreateCycles = function () {
+	var cycles = [];
+	var s = $("#cycle_data").text();
+	
+	var a = s.split(' ');
+	console.log(a);
+	for (var i = 0; i < a.length; i++) {
+		$('#map').after("<label>" + a[i] +  ": <input type='checkbox' name='cycles' value='" + a[i] + "'></label></br>");
+	}
+}
 
 //
 // The Google Map calls us back at ViewShift when some aspect
@@ -171,7 +199,8 @@ ViewShift = function() {
 // 
 // This *initiates* the request back to the server.  When it is done,
 // the browser will call us back at the function NewData (given above)
-	var whatparam = GetChecked;
+	var whatparam = GetCheckedData();
+	var cycle = GetCheckedCycles();
 	$.get("rwb.pl",
 		{
 			act:	"near",
@@ -181,7 +210,8 @@ ViewShift = function() {
 			longsw:	sw.lng(),
 			format:	"raw",
 			// what: 'committees, candidates'
-			what:	whatparam
+			what:	whatparam,
+			cycle: 	cycle
 		}, NewData);
 },
 
@@ -197,7 +227,7 @@ Reposition = function(pos) {
 
 // ... and scroll the map to be centered at that position
 // this should trigger the map to call us back at ViewShift()
-	map.setCenter(new google.maps.LatLng(lat,long));
+	// map.setCenter(new google.maps.LatLng(lat,long));
 // ... and set our user's marker on the map to the new position
 	usermark.setPosition(new google.maps.LatLng(lat,long));
 },
@@ -249,6 +279,7 @@ Start = function(location) {
 	google.maps.event.addListener(map,"zoom_changed",ViewShift);
 
 	CreateBoxes();
+	CreateCycles();
 
 //
 // Finally, tell the browser that if the current location changes, it
