@@ -360,8 +360,8 @@ if ($action eq "base") {
 
   # FOR GETTING ELECTION CYCLES
   my ($str,$error) = Cycles("raw");
-  if (!$error) {  	
-  	print $str;
+  if (!$error) {    
+    print $str;
   }
 # height=1024 width=1024 id=\"info\" name=\"info\" onload=\"UpdateMap()\"></iframe>";
 
@@ -522,13 +522,13 @@ if ($action eq "invite-user") {
 #GIVE-OPINION-DATE
 
 if ($action eq "give-opinion-data") { 
-	print h2("Giving Location Opinion Data Is Unimplemented");
+  print h2("Giving Location Opinion Data Is Unimplemented");
 }
 
 #GIVE-CS-IND-DATA
 
 if ($action eq "give-cs-ind-data") { 
-	print h2("Giving Crowd-sourced Individual Geolocations Is Unimplemented");
+  print h2("Giving Crowd-sourced Individual Geolocations Is Unimplemented");
 }
 
 
@@ -786,11 +786,13 @@ print end_html;
 
 #NEW FUNCTIONS
 sub InviteUser { 
-	my ($email, $name, $token) = @_;
+  my ($email, $name, $token) = @_;
   my $text = "http://murphy.wot.eecs.northwestern.edu/~irl742/rwb/rwb.pl?act=register-user&token=" . $token;
-  my $shell = `$text > mail.txt`;
-	my $mail_status = `cat mail.txt | mail -s "Hi $name, This is a test!" $email`;
-	return $mail_status;
+  open(DATA, ">mail.txt");
+  print (DATA $text);
+  close DATA;
+  my $mail_status = `cat mail.txt | mail -s "Hi $name, This is a test!" $email`;
+  return $mail_status;
 }
 
 sub Cycles {
