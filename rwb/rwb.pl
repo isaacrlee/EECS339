@@ -480,37 +480,44 @@ if ($action eq "near") {
 # INVITE-USER
 
 if ($action eq "invite-user") {
-	if (!$run) { 
-		print start_form(-name=>'InviteUser'),
-		h2('Invite User'),
-		"Name: ", textfield(-name=>'name'),
-		p,
-		"Email: ", textfield(-name=>'email'),
-		p,
+  if (!UserCan($user,"invite-users")) { 
+    print h2('You do not have the required permissions to invite users.');
+    } else {
+     if (!$run) {
+      my $token = RandomString();
+      print start_form(-name=>'InviteUser'),
+      h2('Invite User'),
+      "Name: ", textfield(-name=>'name'),
+      p,
+      "Email: ", textfield(-name=>'email'),
+      p,
         # "Password: ", textfield(-name=>'password'),
         # p,
         hidden(-name=>'run',-default=>['1']),
-        hidden(-name=>'act',-default=>['add-user']),
+        hidden(-name=>'act',-default=>['invite-user']),
+        hidden(-name=>'token',default=>[$token]),
         submit,
         end_form,
         hr;
-        }
-        else {
-        	my $email=param('email');
-        	my $name=param('name');
-        	my $mail_status;
-        	$mail_status=InviteUser($email, $name);
-        	if ($mail_status) { 
-        		print "Can't invite user because: $mail_status";
-        		} else {
-        			print "Invited user $email as referred by $user\n";
-        		}
-        	}
+      }
+      else {
+       my $email=param('email');
+       my $name=param('name');
+       my $token=param('token');
+       my $mail_status;
+       $mail_status=InviteUser($email, $name, $token);
+       if ($mail_status) { 
+        print "Can't invite user because: $mail_status";
+        } else {
+         print "Invited user $email as referred by $user\n";
+       }
+     }
 
-        	print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
+     print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
 
-        	print h2("Invite User Functionality Is implemented!");
-        }
+     print h2("Invite User Functionality Is implemented!");
+   }
+ }
 
 #GIVE-OPINION-DATE
 
@@ -570,36 +577,35 @@ if ($action eq "add-user") {
 
 # REGISTER PAGE
 if ($action eq "register-user") { 
-  
-      if (!$run) { 
-        print start_form(-name=>'AddUser'),
-        h2('Add User'),
-        "Name: ", textfield(-name=>'name'),
-        p,
-        "Email: ", textfield(-name=>'email'),
-        p,
-        "Password: ", textfield(-name=>'password'),
-        p,
-        hidden(-name=>'run',-default=>['1']),
-        hidden(-name=>'act',-default=>['add-user']),
-        submit,
-        end_form,
-        hr;
-        } else {
-          my $name=param('name');
-          my $email=param('email');
-          my $password=param('password');
-          my $error;
-          $error=UserAdd($name,$password,$email,$user);
-          if ($error) { 
-           print "Can't add user because: $error";
-           } else {
-             print "Added user $name $email as referred by $user\n";
-           }
-         }
-       
-       print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
+  if (!$run) { 
+    print start_form(-name=>'AddUser'),
+    h2('Add User'),
+    "Name: ", textfield(-name=>'name'),
+    p,
+    "Email: ", textfield(-name=>'email'),
+    p,
+    "Password: ", textfield(-name=>'password'),
+    p,
+    hidden(-name=>'run',-default=>['1']),
+    hidden(-name=>'act',-default=>['register-user']),
+    submit,
+    end_form,
+    hr;
+    } else {
+      my $name=param('name');
+      my $email=param('email');
+      my $password=param('password');
+      my $error;
+      $error=UserAdd($name,$password,$email,$user);
+      if ($error) { 
+       print "Can't add user because: $error";
+       } else {
+         print "Added user $name $email as referred by $user\n";
+       }
      }
+
+     print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
+   }
 
 #
 # DELETE-USER
@@ -778,9 +784,11 @@ print end_html;
 #
 
 
-#NEW FUNCTION
+#NEW FUNCTIONS
 sub InviteUser { 
-	my ($email, $name) = @_;
+	my ($email, $name, $token) = @_;
+  my $text = "http://murphy.wot.eecs.northwestern.edu/~irl742/rwb/rwb.pl?act=register-user&token=" . $token;
+  my $shell = `$text > mail.txt`;
 	my $mail_status = `cat mail.txt | mail -s "Hi $name, This is a test!" $email`;
 	return $mail_status;
 }
@@ -804,6 +812,10 @@ sub Cycles {
         }
       }
     }
+
+sub RandomString {
+  return "%08X\n", rand(0xffffffff);
+}
 
 #
 # Generate a table of nearby committees

@@ -169,7 +169,6 @@ CreateCycles = function () {
 	var cycles = [];
 	var s = $("#cycle_data").text();
 	var a = s.split("\n");
-	console.log(a);
 	for (var i = 0; i < a.length - 1; i++) {
 		var cycle = a[i];
 		$('#map').after("<label>Cycle: " + cycle +  ": <input type='checkbox' name='cycles' value='" + cycle + "'></label></br>");
