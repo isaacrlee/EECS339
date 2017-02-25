@@ -531,18 +531,20 @@ if ($action eq "give-opinion-data") {
   # print h2("Giving Location Opinion Data Is implemented!");
   print "<script src=\"http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js\" type=\"text/javascript\"></script>";
   print '<script src="give-opinion.js"></script>';
-  my $lat = "";
-  my $lng = "";
-  $lng = param('lng_cen');
   if (!UserCan($user,"give-opinion-data")) { 
     print h2('You do not have the required permissions to give opinion data.');
     } else { # you do have permission
       if (!$run) { # need to input opinion
-        print "$lat $lng";
         print start_form(-name=>'Opinion'),
         h2('Insert Political Opinion'),
         "Opinion: ", radio_group(-name=>'color',
-          -values=>['Red','Blue']),
+          -values=>['Red', 'White', 'Blue']),
+        p,
+        "Lat: ", textfield(-name=>'lat',
+          -default=>'WAIT'),
+        p,
+        "Lng: ", textfield(-name=>'lng',
+          -default=>'WAIT'),
         p,
         hidden(-name=>'run',-default=>['1']),
         hidden(-name=>'act',-default=>['give-opinion-data']),
@@ -552,7 +554,20 @@ if ($action eq "give-opinion-data") {
           hr;
         } else { # process opinion
        # query args: user,
-      #eval {ExecSQL($dbuser,$dbpasswd,"insert into rwb_opinions(submitter, color, latitude, longitude) values (?, ?, ?,?)", undef, $user, 'color', $lat, $lng };
+       my $lat = param('lat');
+       my $lng = param('lng');
+       my $color = param('color');
+       my $cval = 0;
+       if ($color eq 'Red') {
+        $cval = -1;
+       }
+       if ($color eq 'White') {
+        $cval = 0;
+       }
+       if ($color eq 'Blue') {
+        $cval = 1;
+       }
+       eval {ExecSQL($dbuser,$dbpasswd,"insert into rwb_opinions(submitter, color, latitude, longitude) values (?, ?, ?,?)", undef, $user, $cval, $lat, $lng);};
 
     }
     print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
@@ -649,8 +664,8 @@ if ($action eq "register-user") {
             eval {ExecSQL($dbuser,$dbpasswd,"delete from onetime_keys where onetime_key =  ?", undef, param('token'));};
             print "Added user $name $email as referred by $user\n";
           }
-          my $error=GiveUserPerm($name,$perm);
-          if ($error) {
+          my $err=GiveUserPerm($name,$perm);
+          if ($err) {
            print "Can't add permission to user because: $error";
            } else {
              print "Gave user $name permission $perm\n";

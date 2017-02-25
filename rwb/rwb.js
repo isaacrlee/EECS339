@@ -107,9 +107,9 @@ if (whatparam.indexOf('candidates') > -1) {
 if (whatparam.indexOf('individuals') > -1) {
 	UpdateMapById("individual_data", "INDIVIDUAL");
 }
-	// if (whatparam.indexOf('committees') > -1) {
-	// 	UpdateMapById("opinion_data","OPINION");
-	// }
+if (whatparam.indexOf('opinions') > -1) {
+	UpdateMapById("opinion_data","OPINION");
+}
 
 // When we're done with the map update, we mark the color division as
 // Ready.
@@ -159,16 +159,17 @@ GetCheckedCycles = function () {
 },
 
 CreateBoxes = function () {
-	$('#map').after("<input type='button' value='Filter' onclick='ViewShift()'>");
 	$('#map').after("<label>Individuals: <input type='checkbox' name='filter' value='individuals'></label></br>");
 	$('#map').after("<label>Candidates: <input type='checkbox' name='filter' value='candidates'></label></br>");
 	$('#map').after("<label>Committees: <input type='checkbox' name='filter' value='committees'></label></br>");
+	$('#map').after("<label>Opinions: <input type='checkbox' name='filter' value='Opinions'></label></br>");
 },
 
 CreateCycles = function () {
 	var cycles = [];
 	var s = $("#cycle_data").text();
 	var a = s.split("\n");
+	$('#map').after("<input type='button' value='Filter' onclick='ViewShift()'>");
 	for (var i = 0; i < a.length - 1; i++) {
 		var cycle = a[i];
 		$('#map').after("<label>Cycle: " + cycle +  ": <input type='checkbox' name='cycles' value='" + cycle + "'></label></br>");
@@ -278,8 +279,8 @@ google.maps.event.addListener(map,"bounds_changed",ViewShift);
 google.maps.event.addListener(map,"center_changed",ViewShift);
 google.maps.event.addListener(map,"zoom_changed",ViewShift);
 
-CreateBoxes();
 CreateCycles();
+CreateBoxes();
 
 //
 // Finally, tell the browser that if the current location changes, it
