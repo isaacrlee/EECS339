@@ -79,8 +79,10 @@ use Time::ParseDate;
 #
 
 ### CHANGE ME ###
-my $dbuser="jrf600";
-my $dbpasswd="zo9DVsl3u";
+my $dbuser="irl742";
+my $dbpasswd="zmL4aKrk7";
+# my $dbuser="jrf600";
+# my $dbpasswd="zo9DVsl3u";
 
 
 #
@@ -524,7 +526,31 @@ if ($action eq "invite-user") {
 #GIVE-OPINION-DATE
 
 if ($action eq "give-opinion-data") {
-  print h2("Giving Location Opinion Data Is Unimplemented");
+  if ($action eq "give-opinion-data") {
+  if (!UserCan($user,"give-opinion-data")) { 
+    print h2('You do not have the required permissions to give opinion data.');
+    } else { # you do have permission
+      if (!$run) { # need to input opinion
+        print start_form(-name=>'Opinion'),
+        h2('Give Opinion'),
+        "Opinion: ", radio_group(-name=>'name',
+           -values=>['Red','Blue']);
+        p,
+        hidden(-name=>'run',-default=>['1']),
+        hidden(-name=>'act',-default=>['add-user']),
+        #location (lat/long)
+        submit,
+        end_form,
+        hr;
+        
+        } else { # process opinion
+       # my $email=param('email');
+       # my $name=param('name');
+       #add to sql
+     }
+   }
+  print h2("Giving Location Opinion Data Is implemented!");
+}
 }
 
 #GIVE-CS-IND-DATA
@@ -604,19 +630,26 @@ if ($action eq "register-user") {
         my $password=param('password');
         my $error;
         $error=UserAdd($name,$password,$email,$user);
+        #created account should have a subset of the permissions of the inviter
+        my $perm = GetUserPerm($user);
         if ($error) {
-        print "Can't add user because: $error";
-        } else {
-          eval {ExecSQL($dbuser,$dbpasswd,"delete from onetime_keys where onetime_key =  ?", undef, param('token'));};
-          print "Added user $name $email as referred by $user\n";
-
+          print "Can't add user because: $error";
+          } else {
+            eval {ExecSQL($dbuser,$dbpasswd,"delete from onetime_keys where onetime_key =  ?", undef, param('token'));};
+            print "Added user $name $email as referred by $user\n";
+          }
+          my $error=GiveUserPerm($name,$perm);
+          if ($error) {
+           print "Can't add permission to user because: $error";
+           } else {
+             print "Gave user $name permission $perm\n";
+           }
+         }
+         } else {
+          print ("Invalid Token: User not referred");
         }
+        print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
       }
-    } else {
-      print ("Invalid Token: User not referred");
-    }
-    print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
-   }
 
 #
 # DELETE-USER
@@ -800,13 +833,14 @@ sub InviteUser {
   my ($email, $name, $token) = @_;
   my @rows;
   #### CHANGE ME ####
-  my $text = "http://murphy.wot.eecs.northwestern.edu/~jrf600/rwb/rwb.pl?act=register-user&token=" . $token;
+  # my $text = "http://murphy.wot.eecs.northwestern.edu/~jrf600/rwb/rwb.pl?act=register-user&token=" . $token;
+  my $text = "http://murphy.wot.eecs.northwestern.edu/~irl742/rwb/rwb.pl?act=register-user&token=" . $token;
   open(DATA, ">mail.txt");
   print (DATA $text);
   close DATA;
   my $mail_status = `cat mail.txt | mail -s "Hi $name, This is a test!" $email`;
   if (!$mail_status){
-      eval {
+    eval {
       @rows = ExecSQL($dbuser, $dbpasswd, "insert into onetime_keys values ?", undef, $text);
     };
   }
@@ -833,9 +867,9 @@ sub Cycles {
       }
     }
 
-sub RandomString {
-  return "%08X\n", rand(0xffffffff);
-}
+    sub RandomString {
+      return "%08X\n", rand(0xffffffff);
+    }
 
 #
 # Generate a table of nearby committees
@@ -1085,7 +1119,13 @@ sub UserCan {
     }
   }
 
-
+#NEW FUNCTION GetUserPerm
+sub GetUserPerm {
+  my ($user)=@_;
+  my @col;
+  eval {@col= ExecSQL($dbuser,$dbpasswd, "select * from rwb_permissions where name=?","ROW",$user,$action);};
+  return @col;
+}
 
 
 
