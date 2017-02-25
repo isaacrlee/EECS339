@@ -582,7 +582,7 @@ if ($action eq "register-user") {
   # if statement that checks string is right
   # param('token') to access token
   my @rows;
-  @rows = eval {ExecSQL($dbuser,$dbpasswd,"select * from onetime_keys where onetime_key =  ?", undef, param 'token');};
+  @rows = eval {ExecSQL($dbuser,$dbpasswd,"select * from onetime_keys where onetime_key =  ?", undef, param ('token'));};
   if (@rows){
     if (!$run) {
       print start_form(-name=>'AddUser'),
@@ -607,7 +607,7 @@ if ($action eq "register-user") {
         if ($error) {
         print "Can't add user because: $error";
         } else {
-          eval {ExecSQL($dbuser,$dbpasswd,"delete from onetime_keys where onetime_key =  ?", undef, param 'token');};
+          eval {ExecSQL($dbuser,$dbpasswd,"delete from onetime_keys where onetime_key =  ?", undef, param('token'));};
           print "Added user $name $email as referred by $user\n";
 
         }
