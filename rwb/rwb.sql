@@ -4,10 +4,10 @@
 --
 --
 -- This contains *part* of the Red, White, and Blue data
--- schema.  It does not include the representation of the 
--- FEC data and the Geolocation data,  which is available 
--- separately in ~pdinda/339/HANDOUT/rwb/fec.  
--- These shared tables should be 
+-- schema.  It does not include the representation of the
+-- FEC data and the Geolocation data,  which is available
+-- separately in ~pdinda/339/HANDOUT/rwb/fec.
+-- These shared tables should be
 -- access using cs339.tablename, that is, the student groups
 -- share the FEC and geolocation data
 --
@@ -16,6 +16,8 @@
 -- that is, each student group's tables are a separate
 --
 --
+
+create table onetime_keys ( onetime_key varchar (8) primary key );
 
 
 --
@@ -92,18 +94,18 @@ CREATE TABLE rwb_permissions (
 -- of
 --
 create table rwb_cs_ind_to_geo (
--- 
+--
 -- Requester must be a user
 --
   requester varchar(64) not null references rwb_users(name) on delete cascade,
--- 
+--
 -- Submitter must be a user
 -- If this is null, it indicates that the geolocation is requested
 --
   submitter varchar(64) references rwb_users(name) on delete cascade,
 --
 -- Validator must be a user
--- If this is null, it indicates that the geolocation needs to be 
+-- If this is null, it indicates that the geolocation needs to be
 -- validated
 --
   validator varchar(64) references rwb_users(name) on delete cascade,
@@ -115,7 +117,7 @@ create table rwb_cs_ind_to_geo (
 -- Request and validation times (Unix timestamps), zeros mean "not done yet"
 --
 -- must be given at record create time
-  request_time NUMBER NOT NULL, 
+  request_time NUMBER NOT NULL,
 -- given later
   submission_time NUMBER default 0 not null,
 -- given later
@@ -143,7 +145,7 @@ create table rwb_cs_ind_to_geo (
 -- Opinions
 --
 create table rwb_opinions (
--- 
+--
 -- Submitter must be a user
 --
   submitter varchar(64) not null references rwb_users(name) on delete cascade,
