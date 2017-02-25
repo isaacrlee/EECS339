@@ -17,7 +17,7 @@
 --
 --
 
-create table onetime_keys ( onetime_key varchar (8) primary key );
+create table onetime_keys ( onetime_key varchar (16) primary key );
 
 
 --
@@ -27,7 +27,7 @@ create table rwb_users (
 --
 -- Each user must have a name and a unique one at that.
 --
-name  varchar(64) not null primary key,
+  name  varchar(64) not null primary key,
 --
 -- Each user must have a password of at least eight characters
 --
@@ -37,23 +37,23 @@ name  varchar(64) not null primary key,
 -- The right way to do this is to store an encrypted password
 -- in the database
 --
-password VARCHAR(64) NOT NULL,
-constraint long_passwd CHECK (password LIKE '________%'),
+  password VARCHAR(64) NOT NULL,
+    constraint long_passwd CHECK (password LIKE '________%'),
 --
 -- Each user must have an email address and it must be unique
 -- the constraint checks to see that there is an "@" in the name
 --
-email    varchar(256) not null UNIQUE
-constraint email_ok CHECK (email LIKE '%@%'),
+  email    varchar(256) not null UNIQUE
+    constraint email_ok CHECK (email LIKE '%@%'),
 --
 -- Except for the root user and the nobody users, a user must be
 -- validated by an existing user (but not nobody)
 --
-referer varchar(64) not null references rwb_users(name),
+  referer varchar(64) not null references rwb_users(name),
 --
 -- Only root can refer himself
 --
-constraint sane_referer check (name='root' or name<>referer)
+  constraint sane_referer check (name='root' or name<>referer)
 );
 
 
@@ -72,19 +72,19 @@ CREATE TABLE rwb_permissions (
 -- must be a current user on the system.  if a user is deleted
 -- his permissions should be deleted with him
 --
-name  VARCHAR(64) NOT NULL references rwb_users(name)
-ON DELETE cascade,
+  name  VARCHAR(64) NOT NULL references rwb_users(name)
+     ON DELETE cascade,
 --
 -- must be a current action on the system.  if an action is deleted
 -- then all permissions with that action must also be deleted
 --
-action VARCHAR(64) NOT NULL references rwb_actions(action)
-ON DELETE cascade,
+  action VARCHAR(64) NOT NULL references rwb_actions(action)
+     ON DELETE cascade,
 --
 -- name->action mappings must be unique
 --
 --
-constraint perm_unique UNIQUE(name,action)
+  constraint perm_unique UNIQUE(name,action)
 );
 
 
@@ -97,31 +97,31 @@ create table rwb_cs_ind_to_geo (
 --
 -- Requester must be a user
 --
-requester varchar(64) not null references rwb_users(name) on delete cascade,
+  requester varchar(64) not null references rwb_users(name) on delete cascade,
 --
 -- Submitter must be a user
 -- If this is null, it indicates that the geolocation is requested
 --
-submitter varchar(64) references rwb_users(name) on delete cascade,
+  submitter varchar(64) references rwb_users(name) on delete cascade,
 --
 -- Validator must be a user
 -- If this is null, it indicates that the geolocation needs to be
 -- validated
 --
-validator varchar(64) references rwb_users(name) on delete cascade,
+  validator varchar(64) references rwb_users(name) on delete cascade,
 --
 -- Validator must not be the submitter
 --
-constraint val_differ CHECK ((validator is null) or (submitter <> validator)),
+  constraint val_differ CHECK ((validator is null) or (submitter <> validator)),
 --
 -- Request and validation times (Unix timestamps), zeros mean "not done yet"
 --
 -- must be given at record create time
-request_time NUMBER NOT NULL,
+  request_time NUMBER NOT NULL,
 -- given later
-submission_time NUMBER default 0 not null,
+  submission_time NUMBER default 0 not null,
 -- given later
-validation_time NUMBER default 0 not null,
+  validation_time NUMBER default 0 not null,
 --
 -- An individual is identified by the following
 -- references into the individuals table
@@ -135,8 +135,8 @@ validation_time NUMBER default 0 not null,
 --
 -- The geolocation info
 --
-latitude number default 0 not null,
-longitude number default 0 not null
+  latitude number default 0 not null,
+  longitude number default 0 not null
 );
 
 
@@ -148,16 +148,16 @@ create table rwb_opinions (
 --
 -- Submitter must be a user
 --
-submitter varchar(64) not null references rwb_users(name) on delete cascade,
+  submitter varchar(64) not null references rwb_users(name) on delete cascade,
 --
 -- (color scale -1=>Red, +1=>Blue, 0=>Neutral
 --
-color number not null check (color between -1 and 1),
+  color number not null check (color between -1 and 1),
 --
 -- Location
 --
-latitude number not null,
-longitude number not null
+  latitude number not null,
+  longitude number not null
 );
 
 --
