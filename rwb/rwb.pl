@@ -79,8 +79,11 @@ use Time::ParseDate;
 #
 
 ### CHANGE ME ###
-my $dbuser="jrf600";
-my $dbpasswd="zo9DVsl3u";
+
+# my $dbuser="jrf600";
+# my $dbpasswd="zo9DVsl3u";
+my $dbuser="irl742";
+my $dbpasswd="zmL4aKrk7";
 
 
 #
@@ -523,36 +526,38 @@ if ($action eq "invite-user") {
    }
  }
 
-#GIVE-OPINION-DATE
+#GIVE-OPINION-DATA
 if ($action eq "give-opinion-data") {
   # print h2("Giving Location Opinion Data Is implemented!");
-  my $lat = param('lat_cen');
-  my $lng = param('lng_cen');
+  print "<script src=\"http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js\" type=\"text/javascript\"></script>";
+  print '<script src="give-opinion.js"></script>';
+  my $lat = "";
+  my $lng = "";
+  $lng = param('lng_cen');
   if (!UserCan($user,"give-opinion-data")) { 
     print h2('You do not have the required permissions to give opinion data.');
     } else { # you do have permission
       if (!$run) { # need to input opinion
         print "$lat $lng";
         print start_form(-name=>'Opinion'),
-          h2('Insert Political Opinion'),
-          "Opinion: ", radio_group(-name=>'color',
-            -values=>['Red','Blue']),
-          p,
-          hidden(-name=>'run',-default=>['1']),
-          hidden(-name=>'act',-default=>['give-opinion-data']), 
+        h2('Insert Political Opinion'),
+        "Opinion: ", radio_group(-name=>'color',
+          -values=>['Red','Blue']),
+        p,
+        hidden(-name=>'run',-default=>['1']),
+        hidden(-name=>'act',-default=>['give-opinion-data']),
           # location (lat/long)
           submit,
           end_form,
-          hr;      
-
+          hr;
         } else { # process opinion
        # query args: user,
       #eval {ExecSQL($dbuser,$dbpasswd,"insert into rwb_opinions(submitter, color, latitude, longitude) values (?, ?, ?,?)", undef, $user, 'color', $lat, $lng };
 
-     }
-       print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
-     
-   }
+    }
+    print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
+
+  }
 }
 
 # if ($action eq "give-opinion-data") { 
@@ -637,19 +642,25 @@ if ($action eq "register-user") {
         my $password=param('password');
         my $error;
         $error=UserAdd($name,$password,$email,$user);
-        if ($error) { 
-        print "Can't add user because: $error";
-        } else {
-          eval {ExecSQL($dbuser,$dbpasswd,"delete from onetime_keys where onetime_key =  ?", undef, param('token'));};
-          print "Added user $name $email as referred by $user\n";
-
+        my $perm = GetUserPerm($user);
+        if ($error) {
+          print "Can't add user because: $error";
+          } else {
+            eval {ExecSQL($dbuser,$dbpasswd,"delete from onetime_keys where onetime_key =  ?", undef, param('token'));};
+            print "Added user $name $email as referred by $user\n";
+          }
+          my $error=GiveUserPerm($name,$perm);
+          if ($error) {
+           print "Can't add permission to user because: $error";
+           } else {
+             print "Gave user $name permission $perm\n";
+           }
+         }
+         } else {
+          print ("Invalid Token: User not referred"); 
         }
+        print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
       }
-    } else {
-      print ("Invalid Token: User not referred"); 
-    }
-    print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
-   }
 
 #
 # DELETE-USER
@@ -833,13 +844,14 @@ sub InviteUser {
   my ($email, $name, $token) = @_;
   my @rows;
   #### CHANGE ME ####
-  my $text = "http://murphy.wot.eecs.northwestern.edu/~jrf600/rwb/rwb.pl?act=register-user&token=" . $token;
+  # my $text = "http://murphy.wot.eecs.northwestern.edu/~jrf600/rwb/rwb.pl?act=register-user&token=" . $token;
+  my $text = "http://murphy.wot.eecs.northwestern.edu/~irl742/rwb/rwb.pl?act=register-user&token=" . $token;
   open(DATA, ">mail.txt");
   print (DATA $text);
   close DATA;
   my $mail_status = `cat mail.txt | mail -s "Hi $name, This is a test!" $email`;
   if (!$mail_status){
-      eval { 
+    eval { 
       @rows = ExecSQL($dbuser, $dbpasswd, "insert into onetime_keys values (?)", undef, $token);
     };
   }
@@ -866,12 +878,12 @@ sub Cycles {
       }
     }
 
-sub RandomString {
-  my @chars = ("A".."Z", "a".."z");
-  my $string;
-  $string .= $chars[rand @chars] for 1..8;
-  return $string;
-}
+    sub RandomString {
+      my @chars = ("A".."Z", "a".."z");
+      my $string;
+      $string .= $chars[rand @chars] for 1..8;
+      return $string;
+    }
 
 #
 # Generate a table of nearby committees
@@ -1122,7 +1134,13 @@ sub UserCan {
   }
 
 
-
+#NEW FUNCTION GetUserPerm
+sub GetUserPerm {
+  my ($user)=@_;
+  my @col;
+  eval {@col= ExecSQL($dbuser,$dbpasswd, "select * from rwb_permissions where name=?","ROW",$user,$action);};
+  return @col;
+}
 
 
 #
