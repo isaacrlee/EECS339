@@ -77,8 +77,10 @@ use Time::ParseDate;
 #
 # You need to override these for access to your database
 #
-my $dbuser="irl742";
-my $dbpasswd="zmL4aKrk7";
+
+### CHANGE ME ###
+my $dbuser="jrf600";
+my $dbpasswd="zo9DVsl3u";
 
 
 #
@@ -787,11 +789,17 @@ print end_html;
 #NEW FUNCTIONS
 sub InviteUser { 
   my ($email, $name, $token) = @_;
-  my $text = "http://murphy.wot.eecs.northwestern.edu/~irl742/rwb/rwb.pl?act=register-user&token=" . $token;
+  #### CHANGE ME ####
+  my $text = "http://murphy.wot.eecs.northwestern.edu/~jrf600/rwb/rwb.pl?act=register-user&token=" . $token;
   open(DATA, ">mail.txt");
   print (DATA $text);
   close DATA;
   my $mail_status = `cat mail.txt | mail -s "Hi $name, This is a test!" $email`;
+  if (!mail_status){
+      eval { 
+      @rows = ExecSQL($dbuser, $dbpasswd, "insert into onetime_keys values ?", undef, $text);
+    };
+  }
   return $mail_status;
 }
 
