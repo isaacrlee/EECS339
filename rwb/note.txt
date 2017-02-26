@@ -1,0 +1,8 @@
+url: murphy.wot.eecs.northwestern.edu/~irl742/rwb/rwb.pl
+
+Isaac Lee: irl742
+Jared Fernandez: jrf600
+Will Ehrich: wde220
+
+my $dbuser="irl742";
+my $dbpasswd="zmL4aKrk7";
