@@ -142,8 +142,8 @@ UpdateMap();
 
 // GETCOLOR
 GetColor = function() {
-	$('#map').after("<p id='blue'>60</p>");
-	$('#map').after("<p id='red'>20000</p>");
+	//$('#map').after("<p id='blue'>60</p>");
+	//$('#map').after("<p id='red'>20000</p>");
 	var red = $('#red').text();
 	var blue = $('#blue').text();
 	if (red === 0 && blue === 0) {

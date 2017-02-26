@@ -357,10 +357,10 @@ if ($action eq "base") {
   #
   if ($debug) {
     # visible if we are debugging
-    print "<div id=\"data\" style=\:width:100\%; height:10\%\"></div>";
+    print "<div id=\"data\" style=\:width:100\%; height:10\%\; display: none\;\">";
     } else {
     # invisible otherwise
-    print "<div id=\"data\" style=\"display: none;\"></div>";
+    print "<div id=\"data\" style=\"display: none;\">";
   }
 
   # FOR GETTING ELECTION CYCLES
@@ -368,6 +368,7 @@ if ($action eq "base") {
   if (!$error) {    
     print $str;
   }
+  print "</div>";
   
 # height=1024 width=1024 id=\"info\" name=\"info\" onload=\"UpdateMap()\"></iframe>";
 
@@ -452,63 +453,101 @@ if ($action eq "near") {
     } else {
       map {$what{$_}=1} split(/\s*,\s*/,$whatparam);
     }
-
+    
 
     if ($what{committees}) { 
       my ($str,$error) = Committees($latne,$longne,$latsw,$longsw,$cycle,$format);
       if (!$error) {
-        $dem_comm_cand = eval {ExecSQL($dbuser,$dbpasswd,"select sum (transaction_amnt) from cs339.committee_master natural join cs339.comm_to_cand where cmte_pty_affiliation ='DEM' and latitude>? and latitude<? and longitude>? and longitude<?",undef,$latsw,$latne,$longsw,$longne);};
-        $rep_comm_cand = eval {ExecSQL($dbuser,$dbpasswd,"select sum (transaction_amnt) from cs339.committee_master natural join cs339.comm_to_cand where cmte_pty_affiliation ='REP' and latitude>? and latitude<? and longitude>? and longitude<?",undef,$latsw,$latne,$longsw,$longne);};
-        $total_comm_cand = eval {ExecSQL($dbuser,$dbpasswd,"select sum (transaction_amnt) from cs339.committee_master natural join cs339.comm_to_cand where latitude>? and latitude<? and longitude>? and longitude<?",undef,$latsw,$latne,$longsw,$longne);};
+        print "<h2>Nearby committees</h2>";
+        print $str;
+        $dem_comm_cand = eval {ExecSQL($dbuser,$dbpasswd,"select sum(transaction_amnt) 
+          from cs339.committee_master natural join cs339.comm_to_cand natural join cmte_id_to_geo
+          where cmte_pty_affiliation ='DEM' and cycle = ? and  latitude>? and latitude<? and longitude>? and longitude<?",
+          undef,$cycle, $latsw,$latne,$longsw,$longne);};
+        $rep_comm_cand = eval {ExecSQL($dbuser,$dbpasswd,"select sum(transaction_amnt) 
+          from cs339.committee_master natural join cs339.comm_to_cand  natural join cmte_id_to_geo
+          where cmte_pty_affiliation ='REP' and cycle = ? and  latitude>? and latitude<? and longitude>? and longitude<?",
+          undef, $cycle, $latsw,$latne,$longsw,$longne);};
+        $total_comm_cand = eval {ExecSQL($dbuser,$dbpasswd,"select sum(transaction_amnt)
+          from cs339.committee_master natural join cs339.comm_to_cand  natural join cmte_id_to_geo
+          where cycle = ? and latitude>? and latitude<? and longitude>? and longitude<?",
+          undef,$cycle, $latsw,$latne,$longsw,$longne);};
               
-        $dem_comm_comm = eval {ExecSQL($dbuser,$dbpasswd,"select sum (transaction_amnt) from cs339.committee_master natural join cs339.comm_to_comm where cmte_pty_affiliation ='DEM' and latitude>? and latitude<? and longitude>? and longitude<?",undef,$latsw,$latne,$longsw,$longne);};
-        $rep_comm_comm = eval {ExecSQL($dbuser,$dbpasswd,"select sum (transaction_amnt) from cs339.committee_master natural join cs339.comm_to_comm where cmte_pty_affiliation ='REP' and latitude>? and latitude<? and longitude>? and longitude<?",undef,$latsw,$latne,$longsw,$longne);};
-        $total_comm_comm = eval {ExecSQL($dbuser,$dbpasswd,"select sum (transaction_amnt) from cs339.committee_master natural join cs339.comm_to_comm where latitude>? and latitude<? and longitude>? and longitude<?",undef,$latsw,$latne,$longsw,$longne);};
+        $dem_comm_comm = eval {ExecSQL($dbuser,$dbpasswd,"select sum(transaction_amnt) 
+          from cs339.committee_master natural join cs339.comm_to_comm  natural join cmte_id_to_geo
+          where cycle =? and cmte_pty_affiliation ='DEM' and latitude>? and latitude<? and longitude>? and longitude<?",
+          undef, $cycle, $latsw,$latne,$longsw,$longne);};
+        $rep_comm_comm = eval {ExecSQL($dbuser,$dbpasswd,"select sum(transaction_amnt) 
+          from cs339.committee_master natural join cs339.comm_to_comm  natural join cmte_id_to_geo
+          where cycle =? and cmte_pty_affiliation ='REP' and latitude>? and latitude<? and longitude>? and longitude<?",
+          undef, $cycle, $latsw,$latne,$longsw,$longne);};
+        $total_comm_comm = eval {ExecSQL($dbuser,$dbpasswd,"select sum(transaction_amnt) 
+          from cs339.committee_master natural join cs339.comm_to_comm  natural join cmte_id_to_geo
+          where cycle =? and latitude>? and latitude<? and longitude>? and longitude<?",
+          undef, $cycle, $latsw,$latne,$longsw,$longne);};
               
-
         print "Total Committee Contributions: ". ($total_comm_comm + $total_comm_cand);
         print "\nDemocratic Committee Contributions: ".($dem_comm_cand + $dem_comm_comm);
         print "\nRepublican Committee Contributions: ".($rep_comm_cand + $rep_comm_comm);
 
-        if ($format eq "table") { 
-         print "<h2>Nearby committees</h2>$str";
-         } else {
-           print $str;
-         }
+        # if ($format eq "table") { 
+        #  } else {
+        #    print $str;
+        #  }
        }
      }
      if ($what{candidates}) {
       my ($str,$error) = Candidates($latne,$longne,$latsw,$longsw,$cycle,$format);
       if (!$error) {
-        if ($format eq "table") { 
-         print "<h2>Nearby candidates</h2>$str";
-         } else {
-           print $str;
-         }
+        # if ($format eq "table") { 
+         print "<h2>Nearby candidates</h2>".$str;
+        #  } else {
+        #    print $str;
+        #  }
        }
      }
      if ($what{individuals}) {
       my ($str,$error) = Individuals($latne,$longne,$latsw,$longsw,$cycle,$format);
 
       if (!$error) {
-        if ($format eq "table") { 
-            $dem_indv_cand = eval {ExecSQL($dbuser,$dbpasswd,"select sum (transaction_amnt) from cs339.individual natural join cs339.candidate_master where cmte_pty_affiliation ='DEM' and latitude>? and latitude<? and longitude>? and longitude<?",undef,$latsw,$latne,$longsw,$longne);};
-            $rep_indv_cand = eval {ExecSQL($dbuser,$dbpasswd,"select sum (transaction_amnt) from cs339.individual natural join cs339.candidate_master where cmte_pty_affiliation ='REP' and latitude>? and latitude<? and longitude>? and longitude<?",undef,$latsw,$latne,$longsw,$longne);};
-            $total_indv_cand = eval {ExecSQL($dbuser,$dbpasswd,"select sum (transaction_amnt) from cs339.individual natural join cs339.candidate_master where latitude>? and latitude<? and longitude>? and longitude<?",undef,$latsw,$latne,$longsw,$longne);};
+     #  if ($format eq "table") { 
+            print "<h2>Nearby individuals</h2>";
+            print $str;
+
+            $dem_indv_cand = eval {ExecSQL($dbuser,$dbpasswd,"select sum(transaction_amnt) 
+              from cs339.individual natural join cs339.candidate_master natural join ind_to_geo
+              where cycle =? and cmte_pty_affiliation ='DEM' and latitude>? and latitude<? and longitude>? and longitude<?",
+              undef, $cycle, $latsw,$latne,$longsw,$longne);};
+            $rep_indv_cand = eval {ExecSQL($dbuser,$dbpasswd,"select sum(transaction_amnt) 
+              from cs339.individual natural join cs339.candidate_master natural join ind_to_geo
+              where cycle =? and cmte_pty_affiliation ='REP' and latitude>? and latitude<? and longitude>? and longitude<?",
+              undef, $cycle, $latsw,$latne,$longsw,$longne);};
+            $total_indv_cand = eval {ExecSQL($dbuser,$dbpasswd,"select sum(transaction_amnt) 
+              from cs339.individual natural join cs339.candidate_master natural join ind_to_geo
+              where cycle =? and latitude>? and latitude<? and longitude>? and longitude<?",
+              undef, $cycle, $latsw,$latne,$longsw,$longne);};
                   
-            $dem_indv_comm = eval {ExecSQL($dbuser,$dbpasswd,"select sum (transaction_amnt) from cs339.individual natural join cs339.committee_master where cand_pty_affiliation ='DEM' and latitude>? and latitude<? and longitude>? and longitude<?",undef,$latsw,$latne,$longsw,$longne);};
-            $rep_indv_comm = eval {ExecSQL($dbuser,$dbpasswd,"select sum (transaction_amnt) from cs339.individual natural join cs339.committee_master where cand_pty_affiliation ='REP' and latitude>? and latitude<? and longitude>? and longitude<?",undef,$latsw,$latne,$longsw,$longne);};
-            $total_indv_comm = eval {ExecSQL($dbuser,$dbpasswd,"select sum (transaction_amnt) from cs339.individual natural join cs339.committee_master where latitude>? and latitude<? and longitude>? and longitude<?",undef,$latsw,$latne,$longsw,$longne);};
+            $dem_indv_comm = eval {ExecSQL($dbuser,$dbpasswd,"select sum(transaction_amnt) 
+              from cs339.individual natural join cs339.committee_master natural join ind_to_geo
+              where cycle =? and cand_pty_affiliation ='DEM' and latitude>? and latitude<? and longitude>? and longitude<?",
+              undef, $cycle, $latsw,$latne,$longsw,$longne);};
+            $rep_indv_comm = eval {ExecSQL($dbuser,$dbpasswd,"select sum(transaction_amnt) 
+              from cs339.individual natural join cs339.committee_master natural join ind_to_geo
+              where cycle =? and cand_pty_affiliation ='REP' and latitude>? and latitude<? and longitude>? and longitude<?",
+              undef, $cycle, $latsw,$latne,$longsw,$longne);};
+            $total_indv_comm = eval {ExecSQL($dbuser,$dbpasswd,"select sum(transaction_amnt) 
+              from cs339.individual natural join cs339.committee_master natural join ind_to_geo
+              where cycle =? and latitude>? and latitude<? and longitude>? and longitude<?",
+              undef, $cycle, $latsw,$latne,$longsw,$longne);};
                   
 
             print "Total Individual Contributions: ". ($total_indv_comm + $total_indv_cand);
             print "\nDemocratic Individual Contributions: ".($dem_indv_cand + $dem_indv_comm);
             print "\nRepublican Individual Contributions: ".($rep_indv_cand + $rep_indv_comm);
 
-         print "<h2>Nearby individuals</h2>$str";
-         } else {
-           print $str;
-         }
+        #  } else {
+        #    print $str;
+        #  }
        }
      }
 
@@ -521,18 +560,23 @@ if ($action eq "near") {
 
      if ($what{opinions}) {
       my ($str,$error) = Opinions($latne,$longne,$latsw,$longsw,$cycle,$format);
-      my $average = eval {ExecSQL($dbuser,$dbpasswd,"select AVERAGE(color) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<?",undef,$latsw,$latne,$longsw,$longne);};
-      my $std_dev = eval {ExecSQL($dbuser,$dbpasswd,"select STDDEV(color) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<?",undef,$latsw,$latne,$longsw,$longne);};
+      my $average = eval {ExecSQL($dbuser,$dbpasswd,"select AVERAGE(color) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<?",
+      undef,$latsw,$latne,$longsw,$longne);};
+      my $std_dev = eval {ExecSQL($dbuser,$dbpasswd,"select STDDEV(color) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<?",
+      undef,$latsw,$latne,$longsw,$longne);};
 
       $r_val = 255* (1-$average)/2.0;
       $b_val = 255* (1+$average)/2.0;
 
       if (!$error) {
-        if ($format eq "table") { 
-         print "<h2>Nearby opinions</h2>$str";
-         } else {
-           print $str;
-         }
+        # if ($format eq "table") { 
+         print "<h2>Nearby opinions</h2>";
+         print $str;
+         print "<h3>Average Opinion: ".$average."</h3>";
+         print "<h3>Std. Deviation: ".$std_dev."</h3>";
+        #  } else {
+        #    print $str;
+        #  }
        }
      }
 
@@ -1384,7 +1428,7 @@ sub ExecSQL {
     die $errstr;
   }
   #
-  # The rest assumes that the data will be forthcoming.
+  # The rest assums that the data will be forthcoming.
   #
   #
   my @data;
