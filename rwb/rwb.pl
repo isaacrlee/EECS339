@@ -80,10 +80,10 @@ use Time::ParseDate;
 
 ### CHANGE ME ###
 
-my $dbuser="jrf600";
-my $dbpasswd="zo9DVsl3u";
-# my $dbuser="irl742";
-# my $dbpasswd="zmL4aKrk7";
+# my $dbuser="jrf600";
+# my $dbpasswd="zo9DVsl3u";
+my $dbuser="irl742";
+my $dbpasswd="zmL4aKrk7";
 
 
 #

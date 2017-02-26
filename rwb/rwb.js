@@ -32,6 +32,7 @@ $(document).ready(function() {
 
 // Global variables
 var map, usermark, markers = [];
+var resets = 0;
 
 // UpdateMapById draws markers of a given category (id)
 // onto the map using the data for that id stashed within
@@ -97,17 +98,20 @@ ClearMarkers();
 // Note that there additional categories here that are
 // commented out...  Those might help with the project...
 //
+var cycles = GetCheckedCycles();
 var whatparam = GetCheckedData();
-if (whatparam.indexOf('committees') > -1) {
+// console.log(whatparam);
+// console.log(cycles);
+if ($('#committee_data').length > 0) {
 	UpdateMapById("committee_data","COMMITTEE");
 }
-if (whatparam.indexOf('candidates') > -1) {
+if ($('#candidate_data').length > 0) {
 	UpdateMapById("candidate_data","CANDIDATE");
 }
-if (whatparam.indexOf('individuals') > -1) {
+if ($('#individual_data').length > 0) {
 	UpdateMapById("individual_data", "INDIVIDUAL");
 }
-if (whatparam.indexOf('opinions') > -1) {
+if ($('#opinion_data').length > 0) {
 	UpdateMapById("opinion_data","OPINION");
 }
 
@@ -142,14 +146,30 @@ UpdateMap();
 
 // GETCOLOR
 GetColor = function() {
-	//$('#map').after("<p id='blue'>60</p>");
-	//$('#map').after("<p id='red'>20000</p>");
-	var red = $('#red').text();
-	var blue = $('#blue').text();
-	if (red === 0 && blue === 0) {
+	// $('#map').after("<p id='blue'>60</p>");
+	// $('#map').after("<p id='red'>20000</p>");
+	if ($('#red').length > 0 && $('#blue').length > 0) {
+		var red = $('#red').text();
+		var blue = $('#blue').text();
+	} else {
+		// console.log("reached here");
+		if (CheckNumResets()) {
+			map.setZoom(map.getZoom()-0.5);
+		}
 		return "white";
 	}
-	return "rgb(" + red + ", 0," + blue + ")";
+return "rgb(" + red + ", 0," + blue + ")";
+}
+
+CheckNumResets = function () {
+	if (resets < 3) {
+		resets++;
+		return true;
+	}
+}
+
+ZeroResets = function () {
+	resets = 0;
 }
 
 // NEW FUNCTION GetChecked returns values from checkboxes for what parameter
@@ -180,12 +200,13 @@ CreateBoxes = function () {
 
 CreateCycles = function () {
 	var cycles = [];
-	var s = $("#cycle_data").text();
+	// var s = $("#cycle_data").text();
+	var s = "1112 \n 1111 \n 2222";
 	var a = s.split("\n");
-	$('#map').after("<input type='button' value='Filter' onclick='ViewShift()'>");
+	$('#map').after("<input type='button' value='Filter' onclick='ViewShift(); ZeroResets();'>");
 	for (var i = 0; i < a.length - 1; i++) {
 		var cycle = a[i];
-		$('#map').after("<label>Cycle: " + cycle +  ": <input type='checkbox' name='cycles' value='" + cycle + "'></label></br>");
+		$('#map').after("<label>Cycle: " + cycle +  ": <input type='radio' name='cycles' value='" + cycle + "'></label></br>");
 	}
 
 }
