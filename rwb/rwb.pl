@@ -714,22 +714,34 @@ if ($action eq "register-user") {
         my $password=param('password');
         my $error;
         $error=UserAdd($name,$password,$email,$user);
-        my $perm = GetUserPerm($user);
-        if ($error) {
-          print "Can't add user because: $error";
-          } else {
-            eval {ExecSQL($dbuser,$dbpasswd,"delete from onetime_keys where onetime_key =  ?", undef, param('token'));};
-            print "Added user $name $email as referred by $user\n";
+        my @perms = GetUserPerm($user);
+          my $index = 0;
+          # for my $index (reverse 0..$#array) {
+          #   if ( $array[$index] eq 'manage-users' ) {
+          #     splice(@array, $index, 1, ());
+          #   }
+          # }
+          
+          my $perm;
+          foreach $perm (@perms) {
+            my $err=GiveUserPerm($name,$perm);
+            if ($err) {
+             print "Can't add permission to user because: $error";
+             } else {
+               print "Gave user $name permission $perm\n";
+             }
           }
-          my $err=GiveUserPerm($name,$perm);
-          if ($err) {
-           print "Can't add permission to user because: $error";
-           } else {
-             print "Gave user $name permission $perm\n";
-           }
          }
          } else {
-          print ("Invalid Token: User not referred"); 
+          print ("Invalid Token: User not referred\n\n");
+          # my @perms = GetUserPerm('anon');
+          # my $index = 0;
+          # for my $index (reverse 0..$#perms) {
+          #   if ( $perms[$index] eq 'manage-users' ) {
+          #     splice(@perms, $index, 1, ());
+          #   }
+          # }
+          # print @perms; 
         }
         print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
       }
@@ -1211,7 +1223,7 @@ sub UserCan {
 sub GetUserPerm {
   my ($user)=@_;
   my @col;
-  eval {@col= ExecSQL($dbuser,$dbpasswd, "select * from rwb_permissions where name=?","ROW",$user,$action);};
+  eval {@col= ExecSQL($dbuser,$dbpasswd, "select action from rwb_permissions where name=?","COL",$user);};
   return @col;
 }
 

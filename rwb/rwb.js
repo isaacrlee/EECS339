@@ -117,12 +117,13 @@ color.html("Ready");
 
 // The hand-out code doesn't actually set the color according to the data
 // (that's the student's job), so we'll just assign it a random color for now
-if (Math.random()>0.5) {
-	color.css("background-color", "blue");
-} else {
-	color.css("background-color", "red");
-}
-
+// if (Math.random()>0.5) {
+// 	color.css("background-color", "blue");
+// } else {
+// 	color.css("background-color", "red");
+// }
+bg = GetColor();
+color.css("background-color", bg);
 },
 
 //
@@ -138,6 +139,18 @@ $("#data").html(data);
 // update the map
 UpdateMap();
 },
+
+// GETCOLOR
+GetColor = function() {
+	$('#map').after("<p id='blue'>60</p>");
+	$('#map').after("<p id='red'>20000</p>");
+	var red = $('#red').text();
+	var blue = $('#blue').text();
+	if (red === 0 && blue === 0) {
+		return "white";
+	}
+	return "rgb(" + red + ", 0," + blue + ")";
+}
 
 // NEW FUNCTION GetChecked returns values from checkboxes for what parameter
 GetCheckedData = function () {
