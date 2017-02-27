@@ -583,24 +583,24 @@ if ($action eq "near") {
       $b_val = (255.0 * $total_dem)/$total_contrib;
     }
 
-     my @average = [];
-     my @std_dev = [];
+     my $average = 0;
+     my $std_dev = 0;
      if ($what{opinions}) {
       my ($str,$error) = Opinions($latne,$longne,$latsw,$longsw,$cycle,$format);
-      eval {@average = ExecSQL($dbuser,$dbpasswd,"select AVERAGE(color) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<?",
+      eval {$average = ExecSQL($dbuser,$dbpasswd,"select avg(color) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<?",
       undef,$latsw,$latne,$longsw,$longne);};
-      eval {@std_dev = ExecSQL($dbuser,$dbpasswd,"select STDDEV(color) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<?",
+      eval {$std_dev = ExecSQL($dbuser,$dbpasswd,"select STDDEV(color) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<?",
       undef,$latsw,$latne,$longsw,$longne);};
 
-      $r_val = 255* (1-@average[0])/2.0;
-      $b_val = 255* (1+@average[0])/2.0;
+      $r_val = 255* (1-$average)/2.0;
+      $b_val = 255* (1+$average)/2.0;
 
       if (!$error) {
         # if ($format eq "table") {
          print "<h2>Nearby opinions</h2>";
          print $str;
-         print "<h3>Average Opinion: ".@average[0]."</h3>";
-         print "<h3>Std. Deviation: ".@std_dev[0]."</h3>";
+         print "<h3>Average Opinion: ".$average."</h3>";
+         print "<h3>Std. Deviation: ".$std_dev."</h3>";
         #  } else {
         #    print $str;
         #  }

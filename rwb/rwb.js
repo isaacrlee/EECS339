@@ -127,6 +127,7 @@ color.html("Ready");
 // 	color.css("background-color", "red");
 // }
 bg = GetColor();
+console.log(bg);
 color.css("background-color", bg);
 },
 
@@ -152,13 +153,15 @@ GetColor = function() {
 		var red = $('#red').text();
 		var blue = $('#blue').text();
 	}
-	if (red === 0 && blue === 0) {
+	console.log(red);
+	console.log(blue);
+	if (parseInt(red) === 0 && parseInt(blue) === 0) {
 		// if (CheckNumResets()) {
 		// 	map.setZoom(map.getZoom()-0.5);
 		// }
 		return "white";
 	}
-return "rgb(" + red + ", 0," + blue + ")";
+return "rgb(" + parseInt(red) + ",0," + parseInt(blue) + ")";
 }
 
 CheckNumResets = function () {
