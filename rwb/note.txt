@@ -6,3 +6,6 @@ Will Ehrich: wde220
 
 my $dbuser="irl742";
 my $dbpasswd="zmL4aKrk7";
+
+Additionally, we attempted to implement the automatic zooming out function, however, to the increased load it puts on the server, it is currently commented out at line 155 in rwb.js
+Also, our sql queries for the transaction summations are working on sqlplus, but are unsure if they are correctly embedded in the perl file.

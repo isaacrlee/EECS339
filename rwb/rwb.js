@@ -158,7 +158,6 @@ GetColor = function() {
 		// }
 		return "white";
 	}
-	}
 return "rgb(" + red + ", 0," + blue + ")";
 }
 
