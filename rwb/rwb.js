@@ -151,12 +151,13 @@ GetColor = function() {
 	if ($('#red').length > 0 && $('#blue').length > 0) {
 		var red = $('#red').text();
 		var blue = $('#blue').text();
-	} else {
-		// console.log("reached here");
-		if (CheckNumResets()) {
-			map.setZoom(map.getZoom()-0.5);
-		}
+	}
+	if (red === 0 && blue === 0) {
+		// if (CheckNumResets()) {
+		// 	map.setZoom(map.getZoom()-0.5);
+		// }
 		return "white";
+	}
 	}
 return "rgb(" + red + ", 0," + blue + ")";
 }
@@ -200,8 +201,8 @@ CreateBoxes = function () {
 
 CreateCycles = function () {
 	var cycles = [];
-	// var s = $("#cycle_data").text();
-	var s = "1112 \n 1111 \n 2222";
+	var s = $("#cycle_data").text();
+	// var s = "1112 \n 1111 \n 2222";
 	var a = s.split("\n");
 	$('#map').after("<input type='button' value='Filter' onclick='ViewShift(); ZeroResets();'>");
 	for (var i = 0; i < a.length - 1; i++) {
