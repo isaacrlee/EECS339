@@ -310,9 +310,9 @@ ERROR_T BTreeIndex::FindNode(const SIZE_T &node,
           // return b.GetPtr(offset,ptr);
           // if room in node
           if (b.info.numkeys < b.info.keysize) {
-            SIZE_T so;
+            int so;
             for (so = b.info.keysize - b.info.numkeys; so > offset; so--) {
-              if (rc=b.GetKey(offset,testkey)) {  return rc; }
+              if (rc=b.GetKey(so,testkey)) {  return rc; }
             }
             // for loop start at the end
               // (shifto = keysize - numkeys),
@@ -559,7 +559,3 @@ ostream & BTreeIndex::Print(ostream &os) const
   // WRITE ME
   return os;
 }
-
-
-
-
