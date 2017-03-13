@@ -443,20 +443,36 @@ ERROR_T BTreeIndex::Insert(const KEY_T &key, const VALUE_T &value)
   {
   case BTREE_ROOT_NODE:
   case BTREE_INTERIOR_NODE:
+  case BTREE_LEAF_NODE:
     int empty_slots = b.GetNumSlotsAsLeaf() - b.info.numkeys;
     // if space > 0
-    // iterate through keys and pointers of node
-    // if match, Update
-    // if current key greater, insert key/pointer
-    // push all keys over
-    // push all pointers over
-    // insert key in middle of pushed and unpushed values
-    // increment key counter
+    if (empty_slots > 0) {
+      // iterate through keys and pointers of node
+      for (offset = 0; offset < b.info.numkeys; offset++) {
+        rc = b.GetKey(offset,testkey);
+        if (rc) { return rc; }
+        // if match, Update
+        if (testkey == key) {
+          Update(key, value);
+        }
+        // if current key greater, insert key/pointer
+        else if (testkey < key) {
+          KeyValuePair key_value = new KeyValuePair(key, value);
+          // push all keys/pointers over
+          for (int i = b.info.numkeys; i > offset; i--) {
+            KeyValuePair temp;
+            b.GetKeyVal((i-1), temp);
+            b.SetKeyVal(i,temp);
+          }
+          // insert key in middle of pushed and unpushed values
+          SetKeyVal(offset, key_value);
+          // increment key counter
+          b.info.numkeys++;
+        }
+        // else split (create new node)
+      }
+    }
 
-    // else split (create new node)
-
-
-  case BTREE_LEAF_NODE:
   default:
     // We can't be looking at anything other than a root, internal, or leaf
     return ERROR_INSANE;
