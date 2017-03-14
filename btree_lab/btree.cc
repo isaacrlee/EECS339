@@ -1,5 +1,6 @@
 #include <assert.h>
 #include "btree.h"
+#include <string.h>
 
 KeyValuePair::KeyValuePair()
 {
@@ -429,8 +430,9 @@ ERROR_T BTreeIndex::Insert(const KEY_T &key, const VALUE_T &value)
   SIZE_T offset;
   KEY_T testkey;
   SIZE_T ptr;
+  int empty_slots;
 
-  SIZE_T &node_address = Lookup(key, value);
+  SIZE_T &node_address = LookupOrUpdateInternal(superblock.info.rootnode, BTREE_OP_LOOKUP, key, value);
 
   rc = b.Unserialize(buffercache, node_address);
 
@@ -443,9 +445,84 @@ ERROR_T BTreeIndex::Insert(const KEY_T &key, const VALUE_T &value)
   {
   case BTREE_ROOT_NODE:
   case BTREE_INTERIOR_NODE:
+    empty_slots = GetNumSlotsAsInterior() - b.info.numkeys;
+    if (empty_slots > 0)
+    {
+      for (offset = 0; offset < b.info.numkeys; offset++)
+      {
+        rc = b.GetKey(offset, testkey);
+        if (rc)
+        {
+          return rc;
+        }
+        // if match, Update
+        if (testkey == key)
+        {
+          Update(key, value);
+        }
+        else if ((offset == (b.info.numkeys - 1)) || testkey < key)
+        {
+          for (SIZE_T i = b.info.numkeys; i > offset; i--)
+          {
+            KEY_T temp;
+            b.GetKey((i - 1), temp);
+            b.SetKey(i, temp);
+          }
+
+          for (int i = b.info.numkeys + 1; i > offset; i--)
+          {
+            SIZE_T temp;
+            b.GetPtr((i - 1), temp);
+            b.SetPtr(i, temp);
+          }
+
+          // insert key in middle of pushed and unpushed values
+          b.SetKey(offset, key);
+          b.SetPtr(offset, value);
+          // increment key counter
+          b.info.numkeys++;
+        }
+      }
+    }
+    else
+    {
+      BTreeNode new_node = new BTreeNode(b);
+      SIZE_T nn_ptr, next_ptr;
+      AllocateNode(nn_ptr);
+      int split_ind;
+
+      // Zero data section of new node
+      memcpy(new_node.data, 0, new_node.info.GetNumDataBytes());
+
+      split_ind = (b.info.numkeys + 1) / 2;
+      new_node.info.numkeys = b.info.numkeys / 2;
+
+      // Copy relevant kvp from old node to new node
+      for (int cpy_offset = split_ind; b.info.numkeys - cpy_offset > 0; cpy_offset++)
+      {
+        KeyValuePair pair1;
+        b.GetKeyVal(cpy_offset, pair1);
+        new_node.SetKeyVal(offset, pair1);
+      }
+      // write new node to disk
+
+      new_node.Serialize(buffercache, nn_ptr);
+
+      length = ((keysize + valuesize) * b.info.numkeys - split_ind);
+
+      //UNCERTAIN
+      memset(b.data, 0, length);
+
+      // write old node to disk
+      b.Serialize(buffercache, nn_ptr);
+
+      //Insert new node into tree, w/ptr to rhs node
+      KEY_T key;
+      new_node.GetKey(0, key);
+      Insert(key, nn_ptr);
+    }
   case BTREE_LEAF_NODE:
-    int empty_slots = b.GetNumSlotsAsLeaf() - b.info.numkeys;
-    // if space > 0
+    empty_slots = b.GetNumSlotsAsLeaf() - b.info.numkeys;
     if (empty_slots > 0)
     {
       // iterate through keys and pointers of node
@@ -462,7 +539,7 @@ ERROR_T BTreeIndex::Insert(const KEY_T &key, const VALUE_T &value)
           Update(key, value);
         }
         // if current key greater, insert key/pointer
-        else if (testkey < key)
+        else if ((offset == (b.info.numkeys - 1)) || testkey < key)
         {
           KeyValuePair key_value = new KeyValuePair(key, value);
           // push all keys/pointers over
@@ -483,7 +560,7 @@ ERROR_T BTreeIndex::Insert(const KEY_T &key, const VALUE_T &value)
     else
     {
       BTreeNode new_node = new BTreeNode(b);
-      SIZE_T nn_ptr;
+      SIZE_T nn_ptr, next_ptr;
       AllocateNode(nn_ptr);
 
       // Zero data section of new node
@@ -500,15 +577,19 @@ ERROR_T BTreeIndex::Insert(const KEY_T &key, const VALUE_T &value)
         new_node.SetKeyVal(offset, kvp);
       }
       // write new node to disk
-      new_node.Serialize(buffercache, newnode);
+      b.GetPtr(0, next_ptr);
+      new_node.SetPtr(0, next_ptr);
+      b.SetPtr(0, nn_ptr);
+
+      new_node.Serialize(buffercache, nn_ptr);
 
       length = ((keysize + valuesize) * b.info.numkeys - split_ind);
 
       //UNCERTAIN
-      memset(b.data, 0, length)
+      memset(b.data, 0, length);
 
-          // write old node to disk
-          b.Serialize(buffercache, node);
+      // write old node to disk
+      b.Serialize(buffercache, nn_ptr);
 
       //Insert new node into tree, w/ptr to rhs node
       KEY_T key;
