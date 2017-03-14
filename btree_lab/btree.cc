@@ -471,7 +471,26 @@ ERROR_T BTreeIndex::Insert(const KEY_T &key, const VALUE_T &value)
         }
         // else split (create new node)
       }
+    } else {
+      BTreeNode new_node = new BTreeNode(b);
+      SIZE_T nn_ptr;
+      AllocateNode(nn_ptr);
+
+      split_ind = (b.info.numkeys+1)/2;
+      new_node.info.numkeys = b.info.numkeys/2;      
+
+      for (int cpy_offset = split_ind; b.info.numkeys - cpy_offset > 0 ; cpy_offset ++ ){
+        KeyValuePair pair1;
+        b.GetKeyVal(cpy_offset,pair1);
+        new_node().SetKeyVal(offset,kvp);
+      }
+      
+      memset(b, 0, split_ind)
+
+      
+
     }
+
 
   default:
     // We can't be looking at anything other than a root, internal, or leaf
