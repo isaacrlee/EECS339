@@ -446,51 +446,75 @@ ERROR_T BTreeIndex::Insert(const KEY_T &key, const VALUE_T &value)
   case BTREE_LEAF_NODE:
     int empty_slots = b.GetNumSlotsAsLeaf() - b.info.numkeys;
     // if space > 0
-    if (empty_slots > 0) {
+    if (empty_slots > 0)
+    {
       // iterate through keys and pointers of node
-      for (offset = 0; offset < b.info.numkeys; offset++) {
-        rc = b.GetKey(offset,testkey);
-        if (rc) { return rc; }
+      for (offset = 0; offset < b.info.numkeys; offset++)
+      {
+        rc = b.GetKey(offset, testkey);
+        if (rc)
+        {
+          return rc;
+        }
         // if match, Update
-        if (testkey == key) {
+        if (testkey == key)
+        {
           Update(key, value);
         }
         // if current key greater, insert key/pointer
-        else if (testkey < key) {
+        else if (testkey < key)
+        {
           KeyValuePair key_value = new KeyValuePair(key, value);
           // push all keys/pointers over
-          for (int i = b.info.numkeys; i > offset; i--) {
+          for (int i = b.info.numkeys; i > offset; i--)
+          {
             KeyValuePair temp;
-            b.GetKeyVal((i-1), temp);
-            b.SetKeyVal(i,temp);
+            b.GetKeyVal((i - 1), temp);
+            b.SetKeyVal(i, temp);
           }
           // insert key in middle of pushed and unpushed values
           SetKeyVal(offset, key_value);
           // increment key counter
           b.info.numkeys++;
         }
-        // else split (create new node)
       }
-    } else {
+    }
+    // else split (create new node)
+    else
+    {
       BTreeNode new_node = new BTreeNode(b);
       SIZE_T nn_ptr;
       AllocateNode(nn_ptr);
 
-      split_ind = (b.info.numkeys+1)/2;
-      new_node.info.numkeys = b.info.numkeys/2;      
+      // Zero data section of new node
+      memcpy(new_node.data, 0, new_node.info.GetNumDataBytes());
 
-      for (int cpy_offset = split_ind; b.info.numkeys - cpy_offset > 0 ; cpy_offset ++ ){
+      split_ind = (b.info.numkeys + 1) / 2;
+      new_node.info.numkeys = b.info.numkeys / 2;
+
+      // Copy relevant kvp from old node to new node
+      for (int cpy_offset = split_ind; b.info.numkeys - cpy_offset > 0; cpy_offset++)
+      {
         KeyValuePair pair1;
-        b.GetKeyVal(cpy_offset,pair1);
-        new_node().SetKeyVal(offset,kvp);
+        b.GetKeyVal(cpy_offset, pair1);
+        new_node.SetKeyVal(offset, kvp);
       }
-      
-      memset(b, 0, split_ind)
+      // write new node to disk
+      new_node.Serialize(buffercache, newnode);
 
-      
+      length = ((keysize + valuesize) * b.info.numkeys - split_ind);
 
+      //UNCERTAIN
+      memset(b.data, 0, length)
+
+          // write old node to disk
+          b.Serialize(buffercache, node);
+
+      //Insert new node into tree, w/ptr to rhs node
+      KEY_T key;
+      new_node.GetKey(0, key);
+      Insert(key, nn_ptr);
     }
-
 
   default:
     // We can't be looking at anything other than a root, internal, or leaf
