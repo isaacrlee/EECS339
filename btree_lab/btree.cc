@@ -492,13 +492,13 @@ ERROR_T BTreeIndex::Split(const SIZE_T &node, SIZE_T &new_node, KEY_T &new_key)
   b.info.numkeys -= shift_count;
   // move the last pointer
   rhs.info.numkeys++;
-  b.info.numkeys--;
   if (rc = b.GetPtr(iter + 1, temp_ptr))
     return rc;
   if (rc = b.SetPtr(iter + 1, 0))
     return rc;
   if (rc = rhs.SetPtr(iter + 1 - split_ind, temp_ptr))
     return rc;
+  b.info.numkeys--;
   if (rc = b.Serialize(buffercache, node))
     return rc;
   if (rc = rhs.Serialize(buffercache, new_node))
@@ -551,13 +551,13 @@ ERROR_T BTreeIndex::split_leaf(const SIZE_T &node, SIZE_T &new_node, KEY_T &new_
   b.info.numkeys -= shift_count;
   // move the last pointer
   rhs.info.numkeys++;
-  b.info.numkeys--;
   if (rc = b.GetVal(iter + 1, temp_val))
     return rc;
   if (rc = b.SetVal(iter + 1, z))
     return rc;
   if (rc = rhs.SetVal(iter + 1 - split_ind, temp_val))
     return rc;
+  b.info.numkeys--;
   if (rc = b.Serialize(buffercache, node))
     return rc;
   if (rc = rhs.Serialize(buffercache, new_node))
@@ -647,7 +647,8 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
         else if (new_node && b.info.numkeys < b.info.GetNumSlotsAsInterior())
         {
           b.info.numkeys++;
-          for (int shift_ind = offset; shift_ind < b.info.numkeys; shift_ind++)
+          SIZE_T shift_ind;
+          for (shift_ind = offset; shift_ind < b.info.numkeys; shift_ind++)
           {
             if (rc = b.GetPtr(shift_ind, temp_ptr))
               return rc;
@@ -684,7 +685,8 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
           if (new_key < temp_key)
           {
             b.info.numkeys++;
-            for (int offset = 0; offset < b.info.numkeys; offset++)
+            SIZE_T offset;
+            for (offset = 0; offset < b.info.numkeys; offset++)
             {
               if (rc = b.GetKey(offset, temp_key))
                 return rc;
@@ -712,7 +714,8 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
           else
           {
             rhs.info.numkeys++;
-            for (int offset = 0; offset < rhs.info.numkeys; offset++)
+            SIZE_T offset;
+            for (offset = 0; offset < rhs.info.numkeys; offset++)
             {
               if (rc = rhs.GetKey(offset, temp_key))
                 return rc;
@@ -809,7 +812,8 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
       if (new_key < temp_key)
       {
         b.info.numkeys++;
-        for (int offset = 0; offset < b.info.numkeys; offset++)
+        SIZE_T offset;
+        for (offset = 0; offset < b.info.numkeys; offset++)
         {
           if (rc = b.GetKey(offset, temp_key))
             return rc;
@@ -837,7 +841,8 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
       else
       {
         rhs.info.numkeys++;
-        for (int offset = 0; offset < rhs.info.numkeys; offset++)
+        SIZE_T offset;
+        for (offset = 0; offset < rhs.info.numkeys; offset++)
         {
           if (rc = rhs.GetKey(offset, temp_key))
             return rc;
@@ -916,7 +921,8 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
       new_node = 0;
       new_key = KEY_T();
       b.info.numkeys++;
-      for (int offset = 0; offset < b.info.numkeys; offset++)
+      SIZE_T offset;
+      for (offset = 0; offset < b.info.numkeys-1; offset++)
       {
         if (rc = b.GetKey(offset, temp_key))
           return rc;
@@ -965,7 +971,8 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
       if (new_key < temp_key)
       {
         b.info.numkeys++;
-        for (int offset = 0; offset < b.info.numkeys; offset++)
+       	SIZE_T offset;
+        for (offset = 0; offset < b.info.numkeys; offset++)
         {
           if (rc = b.GetKey(offset, temp_key))
             return rc;
@@ -993,7 +1000,8 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
       else
       {
         rhs.info.numkeys++;
-        for (int offset = 0; offset < rhs.info.numkeys; offset++)
+        SIZE_T offset;
+        for (offset = 0; offset < rhs.info.numkeys; offset++)
         {
           if (rc = rhs.GetKey(offset, temp_key))
             return rc;
