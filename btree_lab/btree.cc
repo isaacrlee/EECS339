@@ -449,7 +449,7 @@ ERROR_T BTreeIndex::Split(const SIZE_T &node, SIZE_T &new_node, KEY_T &new_key)
   const SIZE_T s = NULL;
   const KEY_T k = KEY_T();
   const VALUE_T z = VALUE_T();
-  for (int iter = 0; iter <= b.info.numkeys; iter++)
+  for (iter = 0; iter <= b.info.numkeys; iter++)
   {
     if (iter > split_ind)
     {
@@ -554,6 +554,7 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
   SIZE_T temp_ptr;
   KEY_T lastKey;
 
+
   // unserialize
   if (rc = b.Unserialize(buffercache, node))
     return rc;
@@ -616,6 +617,7 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
         }
         else if (new_node && b.info.numkeys < b.info.GetNumSlotsAsInterior())
         {
+          b.info.numkeys ++;
           for (int shift_ind = offset; shift_ind < b.info.numkeys; shift_ind++)
           {
             if (rc = b.GetPtr(shift_ind, temp_ptr))
@@ -675,6 +677,7 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
                   return rc;
               }
             }
+            b.info.numkeys ++;
             //if inserting on right node
           }
           else
@@ -702,6 +705,7 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
                   return rc;
               }
             }
+            rhs.info.numkeys ++;
           }
           if (rc = rhs.GetKey(0, new_key))
             return rc;
@@ -905,6 +909,7 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
             return rc;
         }
       }
+      b.info.numkeys ++;
       return ERROR_NOERROR;
     }
     else
@@ -913,9 +918,77 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
       BTreeNode rhs;
 
       if (rc = rhs.Unserialize(buffercache, new_node))
-		return rc;
-      if (rc = rhs.GetKey(0, new_key)) return rc;
-      return ERROR_NOERROR;
+		  return rc;
+      if (rc = rhs.GetKey(0, temp_key)) return rc;
+      return rc;
+      
+      bool inserted = false;
+      //if inserting on left node
+      if (new_key < temp_key)
+      {
+        for (int offset = 0; offset < b.info.numkeys; offset++)
+        {
+          if (rc = b.GetKey(offset, temp_key))
+            return rc;
+          if (rc = b.GetVal(offset, temp_val))
+            return rc;
+
+          if (new_key < temp_key)
+          {
+            if (!inserted)
+            {
+              if (rc = b.SetVal(offset, value))
+                return rc;
+              if (rc = b.SetVal(offset, value))
+                return rc;
+              inserted = true;
+            }
+            if (rc = b.SetPtr(offset + 1, temp_ptr))
+              return rc;
+            if (rc = b.SetVal(offset + 1, temp_val))
+              return rc;
+          }
+          b.info.numkeys++;
+        }
+        //if inserting on right node
+      }
+      else
+      {
+        for (int offset = 0; offset < rhs.info.numkeys; offset++)
+        {
+          if (rc = rhs.GetKey(offset, temp_key))
+            return rc;
+          if (rc = rhs.GetVal(offset, temp_val))
+            return rc;
+
+          if (new_key < temp_key)
+          {
+            if (!inserted)
+            {
+              if (rc = rhs.SetPtr(offset, node))
+                return rc;
+              if (rc = rhs.SetKey(offset, new_key))
+                return rc;
+              inserted = true;
+            }
+            if (rc = rhs.SetPtr(offset + 1, temp_ptr))
+              return rc;
+            if (rc = rhs.SetKey(offset + 1, temp_key))
+              return rc;
+          }
+        }
+        rhs.info.numkeys++;
+      }
+      if (rc = rhs.GetKey(0, new_key))
+        return rc;
+      if (rc = b.Serialize(buffercache, node))
+        return rc;
+      if (rc = rhs.Serialize(buffercache, new_node))
+        return rc;
+
+
+
+
     }
   }
 }
