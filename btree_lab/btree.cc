@@ -868,10 +868,10 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
       }
       if (rc = rhs.GetKey(0, new_key))
         return rc;
-      if (rc = b.Serialize(buffercache, node))
-        return rc;
-      if (rc = rhs.Serialize(buffercache, new_node))
-        return rc;
+      // if (rc = b.Serialize(buffercache, node))
+      //   return rc;
+      // if (rc = rhs.Serialize(buffercache, new_node))
+      //   return rc;
 
       //check if b root
       if (b.info.nodetype == BTREE_ROOT_NODE)
@@ -899,10 +899,6 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
           return rc;
         }
 
-        if (rc = b.Serialize(buffercache, node))
-          return rc;
-        if (rc = rhs.Serialize(buffercache, new_node))
-          return rc;
         if (rc = new_root.Serialize(buffercache, new_root_block))
           return rc;
 
@@ -912,6 +908,10 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
 
         return ERROR_NOERROR;
       }
+      if (rc = b.Serialize(buffercache, node))
+          return rc;
+      if (rc = rhs.Serialize(buffercache, new_node))
+          return rc;
     }
   case BTREE_LEAF_NODE:
     VALUE_T temp_val;
@@ -940,6 +940,7 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
             if (rc = b.SetKey(offset, key))
               return rc;
             inserted = true;
+            // return -20;
           }
           if (rc = b.SetVal(offset + 1, temp_val))
             return rc;
@@ -953,6 +954,8 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
   	    if (rc = b.SetKey(offset, key));
         return rc;
       }
+      if (rc = b.Serialize(buffercache, node))
+      return rc;
       return ERROR_NOERROR;
     }
     else
@@ -972,24 +975,24 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
       {
         b.info.numkeys++;
        	SIZE_T offset;
-        for (offset = 0; offset < b.info.numkeys; offset++)
+        for (offset = 0; offset < b.info.numkeys-1; offset++)
         {
           if (rc = b.GetKey(offset, temp_key))
             return rc;
           if (rc = b.GetVal(offset, temp_val))
             return rc;
 
-          if (new_key < temp_key)
+          if (key < temp_key)
           {
             if (!inserted)
             {
-              if (rc = b.SetVal(offset, value))
+              if (rc = b.SetKey(offset, key))
                 return rc;
               if (rc = b.SetVal(offset, value))
                 return rc;
               inserted = true;
             }
-            if (rc = b.SetPtr(offset + 1, temp_ptr))
+            if (rc = b.SetKey(offset + 1, temp_key))
               return rc;
             if (rc = b.SetVal(offset + 1, temp_val))
               return rc;
@@ -1001,24 +1004,24 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
       {
         rhs.info.numkeys++;
         SIZE_T offset;
-        for (offset = 0; offset < rhs.info.numkeys; offset++)
+        for (offset = 0; offset < rhs.info.numkeys-1; offset++)
         {
           if (rc = rhs.GetKey(offset, temp_key))
             return rc;
           if (rc = rhs.GetVal(offset, temp_val))
             return rc;
 
-          if (new_key < temp_key)
+          if (key < temp_key)
           {
             if (!inserted)
             {
-              if (rc = rhs.SetPtr(offset, node))
+              if (rc = rhs.SetVal(offset, value))
                 return rc;
-              if (rc = rhs.SetKey(offset, new_key))
+              if (rc = rhs.SetKey(offset, key))
                 return rc;
               inserted = true;
             }
-            if (rc = rhs.SetPtr(offset + 1, temp_ptr))
+            if (rc = rhs.SetVal(offset + 1, temp_val))
               return rc;
             if (rc = rhs.SetKey(offset + 1, temp_key))
               return rc;
