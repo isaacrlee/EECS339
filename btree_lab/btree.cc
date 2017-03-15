@@ -261,6 +261,20 @@ ERROR_T BTreeIndex::LookupOrUpdateInternal(const SIZE_T &node,
         {
           // BTREE_OP_UPDATE
           // WRITE ME
+          if (op == BTREE_OP_UPDATE)
+          {
+            ERROR_T setValErr = b.SetVal(offset, value);
+            if (setValErr != ERROR_NOERROR)
+            {
+              return setValErr;
+            }
+            ERROR_T serializeBErr = b.Serialize(buffercache, node);
+            if (serializeBErr != ERROR_NOERROR)
+            {
+              return serializeBErr;
+            }
+            return ERROR_NOERROR;
+          }
           return ERROR_UNIMPL;
         }
       }
@@ -437,10 +451,12 @@ ERROR_T BTreeIndex::Split(const SIZE_T &node, SIZE_T &new_node, KEY_T &new_key)
 {
   BTreeNode b;
   ERROR_T rc;
-  if (rc = b.Unserialize(buffercache, node)) return rc;
+  if (rc = b.Unserialize(buffercache, node))
+    return rc;
   BTreeNode rhs = BTreeNode(BTREE_INTERIOR_NODE, superblock.info.keysize, superblock.info.valuesize, superblock.info.blocksize);
   rc = AllocateNode(new_node);
-  if (rc) return rc;
+  if (rc)
+    return rc;
   SIZE_T temp_ptr;
   KEY_T temp_key;
   SIZE_T split_ind = (b.info.numkeys + 1) / 2;
@@ -455,6 +471,7 @@ ERROR_T BTreeIndex::Split(const SIZE_T &node, SIZE_T &new_node, KEY_T &new_key)
     if (iter > split_ind)
     {
       // get stuff to move over
+      rhs.info.numkeys++;
       if (rc = b.GetPtr(iter, temp_ptr))
         return rc;
       if (rc = b.GetKey(iter, temp_key))
@@ -472,19 +489,20 @@ ERROR_T BTreeIndex::Split(const SIZE_T &node, SIZE_T &new_node, KEY_T &new_key)
       shift_count++;
     }
   }
-  rhs.info.numkeys += shift_count;
   b.info.numkeys -= shift_count;
   // move the last pointer
+  rhs.info.numkeys++;
+  b.info.numkeys--;
   if (rc = b.GetPtr(iter + 1, temp_ptr))
     return rc;
   if (rc = b.SetPtr(iter + 1, 0))
     return rc;
   if (rc = rhs.SetPtr(iter + 1 - split_ind, temp_ptr))
     return rc;
-  rhs.info.numkeys++;
-  b.info.numkeys--;
-  if (rc = b.Serialize(buffercache, node) ) return rc;
-  if (rc = rhs.Serialize(buffercache, new_node) )return rc;
+  if (rc = b.Serialize(buffercache, node))
+    return rc;
+  if (rc = rhs.Serialize(buffercache, new_node))
+    return rc;
   return ERROR_NOERROR;
 }
 
@@ -511,6 +529,7 @@ ERROR_T BTreeIndex::split_leaf(const SIZE_T &node, SIZE_T &new_node, KEY_T &new_
   {
     if (iter > split_ind)
     {
+      rhs.info.numkeys++;
       // get stuff to move over
       if (rc = b.GetVal(iter, temp_val))
         return rc;
@@ -529,19 +548,20 @@ ERROR_T BTreeIndex::split_leaf(const SIZE_T &node, SIZE_T &new_node, KEY_T &new_
       shift_count++;
     }
   }
-  rhs.info.numkeys += shift_count;
   b.info.numkeys -= shift_count;
   // move the last pointer
+  rhs.info.numkeys++;
+  b.info.numkeys--;
   if (rc = b.GetVal(iter + 1, temp_val))
     return rc;
   if (rc = b.SetVal(iter + 1, z))
     return rc;
   if (rc = rhs.SetVal(iter + 1 - split_ind, temp_val))
     return rc;
-  rhs.info.numkeys++;
-  b.info.numkeys--;
-  if (rc = b.Serialize(buffercache, node) ) return rc;
-  if (rc = rhs.Serialize(buffercache, new_node) )return rc;
+  if (rc = b.Serialize(buffercache, node))
+    return rc;
+  if (rc = rhs.Serialize(buffercache, new_node))
+    return rc;
   return ERROR_NOERROR;
 }
 
@@ -558,41 +578,46 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
   SIZE_T temp_ptr;
   KEY_T lastKey;
 
-
   // unserialize
   if (rc = b.Unserialize(buffercache, node))
     return rc;
-	  // switch
+  // switch
   switch (b.info.nodetype)
   {
   case BTREE_ROOT_NODE:
-    if (b.info.numkeys == 0) {
-        SIZE_T left_node, right_node;
-        BTreeNode lhs = BTreeNode(BTREE_LEAF_NODE, superblock.info.keysize, superblock.info.valuesize, superblock.info.blocksize);
-        BTreeNode rhs = BTreeNode(BTREE_LEAF_NODE, superblock.info.keysize, superblock.info.valuesize, superblock.info.blocksize);
-        
-        rc = AllocateNode(left_node);
-        if (rc) return rc;
-        rc = AllocateNode(right_node);
-        if (rc) return rc;
+    if (b.info.numkeys == 0)
+    {
+      SIZE_T left_node, right_node;
+      BTreeNode lhs = BTreeNode(BTREE_LEAF_NODE, superblock.info.keysize, superblock.info.valuesize, superblock.info.blocksize);
+      BTreeNode rhs = BTreeNode(BTREE_LEAF_NODE, superblock.info.keysize, superblock.info.valuesize, superblock.info.blocksize);
 
-        b.info.numkeys++;
-		    b.SetKey(0, key);
-		    b.SetPtr(0, left_node);
-		    b.SetPtr(1, right_node);
+      rc = AllocateNode(left_node);
+      if (rc)
+        return rc;
+      rc = AllocateNode(right_node);
+      if (rc)
+        return rc;
 
-        lhs.info.numkeys++;
-        lhs.SetKey(0, key);
-        lhs.SetVal(0, value);
+      b.info.numkeys++;
+      b.SetKey(0, key);
+      b.SetPtr(0, left_node);
+      b.SetPtr(1, right_node);
 
-        rc = lhs.Serialize(buffercache, left_node);
-        if (rc) return rc;
-        rc = rhs.Serialize(buffercache, right_node);
-        if (rc) return rc;
-        rc = b.Serialize(buffercache, node);
-        if (rc) return rc;
-        return ERROR_NOERROR;
-        break;
+      lhs.info.numkeys++;
+      lhs.SetKey(0, key);
+      lhs.SetVal(0, value);
+
+      rc = lhs.Serialize(buffercache, left_node);
+      if (rc)
+        return rc;
+      rc = rhs.Serialize(buffercache, right_node);
+      if (rc)
+        return rc;
+      rc = b.Serialize(buffercache, node);
+      if (rc)
+        return rc;
+      return ERROR_NOERROR;
+      break;
     }
   case BTREE_INTERIOR_NODE:
     for (offset = 0; offset < b.info.numkeys; offset++)
@@ -621,7 +646,7 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
         }
         else if (new_node && b.info.numkeys < b.info.GetNumSlotsAsInterior())
         {
-          b.info.numkeys ++;
+          b.info.numkeys++;
           for (int shift_ind = offset; shift_ind < b.info.numkeys; shift_ind++)
           {
             if (rc = b.GetPtr(shift_ind, temp_ptr))
@@ -650,7 +675,7 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
           BTreeNode rhs;
 
           if (rc = rhs.Unserialize(buffercache, new_node))
-    		return rc;
+            return rc;
           if (rc = rhs.GetKey(0, temp_key))
             return rc;
 
@@ -658,6 +683,7 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
           //if inserting on left node
           if (new_key < temp_key)
           {
+            b.info.numkeys++;
             for (int offset = 0; offset < b.info.numkeys; offset++)
             {
               if (rc = b.GetKey(offset, temp_key))
@@ -681,11 +707,11 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
                   return rc;
               }
             }
-            b.info.numkeys ++;
             //if inserting on right node
           }
           else
           {
+            rhs.info.numkeys++;
             for (int offset = 0; offset < rhs.info.numkeys; offset++)
             {
               if (rc = rhs.GetKey(offset, temp_key))
@@ -709,7 +735,6 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
                   return rc;
               }
             }
-            rhs.info.numkeys ++;
           }
           if (rc = rhs.GetKey(0, new_key))
             return rc;
@@ -775,7 +800,7 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
       BTreeNode rhs;
 
       if (rc = rhs.Unserialize(buffercache, new_node))
-		return rc;
+        return rc;
       if (rc = rhs.GetKey(0, temp_key))
         return rc;
 
@@ -783,6 +808,7 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
       //if inserting on left node
       if (new_key < temp_key)
       {
+        b.info.numkeys++;
         for (int offset = 0; offset < b.info.numkeys; offset++)
         {
           if (rc = b.GetKey(offset, temp_key))
@@ -805,12 +831,12 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
             if (rc = b.SetKey(offset + 1, temp_key))
               return rc;
           }
-          b.info.numkeys++;
         }
         //if inserting on right node
       }
       else
       {
+        rhs.info.numkeys++;
         for (int offset = 0; offset < rhs.info.numkeys; offset++)
         {
           if (rc = rhs.GetKey(offset, temp_key))
@@ -834,7 +860,6 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
               return rc;
           }
         }
-        rhs.info.numkeys++;
       }
       if (rc = rhs.GetKey(0, new_key))
         return rc;
@@ -890,6 +915,7 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
     {
       new_node = 0;
       new_key = KEY_T();
+      b.info.numkeys++;
       for (int offset = 0; offset < b.info.numkeys; offset++)
       {
         if (rc = b.GetKey(offset, temp_key))
@@ -897,7 +923,7 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
         if (rc = b.GetVal(offset, temp_val))
           return rc;
 
-        if ( key < temp_key)
+        if (key < temp_key)
         {
           if (!inserted)
           {
@@ -913,7 +939,6 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
             return rc;
         }
       }
-      b.info.numkeys ++;
       return ERROR_NOERROR;
     }
     else
@@ -922,14 +947,16 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
       BTreeNode rhs;
 
       if (rc = rhs.Unserialize(buffercache, new_node))
-		  return rc;
-      if (rc = rhs.GetKey(0, temp_key)) return rc;
+        return rc;
+      if (rc = rhs.GetKey(0, temp_key))
+        return rc;
       return rc;
-      
+
       bool inserted = false;
       //if inserting on left node
       if (new_key < temp_key)
       {
+        b.info.numkeys++;
         for (int offset = 0; offset < b.info.numkeys; offset++)
         {
           if (rc = b.GetKey(offset, temp_key))
@@ -952,12 +979,12 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
             if (rc = b.SetVal(offset + 1, temp_val))
               return rc;
           }
-          b.info.numkeys++;
         }
         //if inserting on right node
       }
       else
       {
+        rhs.info.numkeys++;
         for (int offset = 0; offset < rhs.info.numkeys; offset++)
         {
           if (rc = rhs.GetKey(offset, temp_key))
@@ -981,7 +1008,6 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
               return rc;
           }
         }
-        rhs.info.numkeys++;
       }
       if (rc = rhs.GetKey(0, new_key))
         return rc;
@@ -997,7 +1023,8 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
 ERROR_T BTreeIndex::Update(const KEY_T &key, const VALUE_T &value)
 {
   // WRITE ME
-  return ERROR_UNIMPL;
+  VALUE_T valueparam = value;
+  return LookupOrUpdateInternal(superblock.info.rootnode, BTREE_OP_UPDATE, key, valueparam);
 }
 
 ERROR_T BTreeIndex::Delete(const KEY_T &key)
