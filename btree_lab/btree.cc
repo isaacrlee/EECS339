@@ -922,7 +922,9 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
           return rc;
         if (rc = b.GetVal(offset, temp_val))
           return rc;
-
+      	if (key == temp_key) {
+      		return ERROR_CONFLICT;
+      	}
         if (key < temp_key)
         {
           if (!inserted)
@@ -938,6 +940,12 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
           if (rc = b.SetKey(offset + 1, temp_key))
             return rc;
         }
+      }
+      if (!inserted) {
+      	if (rc = b.SetVal(offset, value));
+        return rc;
+  	    if (rc = b.SetKey(offset, key));
+        return rc;
       }
       return ERROR_NOERROR;
     }
