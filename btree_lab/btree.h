@@ -54,14 +54,14 @@ class BTreeIndex {
   ERROR_T      DeallocateNode(const SIZE_T &node);
 
   ERROR_T      LookupOrUpdateInternal(const SIZE_T &Node,
-				      const BTreeOp op, 
-				      const KEY_T &key,
-				      VALUE_T &val);
+              const BTreeOp op, 
+              const KEY_T &key,
+              VALUE_T &val);
   
 
   ERROR_T      DisplayInternal(const SIZE_T &node,
-			       ostream &o, 
-			       const BTreeDisplayType display_type=BTREE_DEPTH) const;
+             ostream &o, 
+             const BTreeDisplayType display_type=BTREE_DEPTH) const;
 public:
   //
   // keysize and valueszie should be stored in the 
@@ -74,9 +74,9 @@ public:
   // will be zero and will be read when Attach(initialblock,false) is 
   // invoked
   BTreeIndex(SIZE_T keysize, 
-	     SIZE_T valuesize,
-	     BufferCache *cache,
-	     bool unique=true);   // true if a  key maps to a single value
+       SIZE_T valuesize,
+       BufferCache *cache,
+       bool unique=true);   // true if a  key maps to a single value
 
 
   BTreeIndex();
@@ -105,6 +105,13 @@ public:
   // return ERROR_SIZE if the key or value are the wrong size for this index
   // return ERROR_CONFLICT if the key already exists and it's a unique index
   ERROR_T Insert(const KEY_T &key, const VALUE_T &value);
+  ERROR_T InsertInternal(const SIZE_T &node,
+                                   const KEY_T &key,
+                                   const VALUE_T &value,
+                                   SIZE_T &new_node,
+                                   KEY_T &new_key);
+  ERROR_T Split(const SIZE_T &node, SIZE_T &new_node,KEY_T &new_key);
+  ERROR_T split_leaf(const SIZE_T &node, SIZE_T &new_node,KEY_T &new_key);
   
   // return zero on success
   // return ERROR_NONEXISTENT  if the key doesn't exist
