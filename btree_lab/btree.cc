@@ -557,11 +557,38 @@ ERROR_T BTreeIndex::InsertInternal(const SIZE_T &node,
   // unserialize
   if (rc = b.Unserialize(buffercache, node))
     return rc;
-
-  // switch
+	  // switch
   switch (b.info.nodetype)
   {
   case BTREE_ROOT_NODE:
+    if (b.info.numkeys == 0) {
+        SIZE_T left_node, right_node;
+        BTreeNode lhs = BTreeNode(BTREE_LEAF_NODE, superblock.info.keysize, superblock.info.valuesize, superblock.info.blocksize);
+        BTreeNode rhs = BTreeNode(BTREE_LEAF_NODE, superblock.info.keysize, superblock.info.valuesize, superblock.info.blocksize);
+        
+        rc = AllocateNode(left_node);
+        if (rc) return rc;
+        rc = AllocateNode(right_node);
+        if (rc) return rc;
+
+		    b.SetKey(0, key);
+		    b.SetPtr(0, left_node);
+		    b.SetPtr(1, right_node);
+        b.info.numkeys++;
+
+        lhs.SetKey(0, key);
+        lhs.SetVal(0,value);
+        lhs.info.numkeys++;
+
+        rc = lhs.Serialize(buffercache, left_node);
+        if (rc) return rc;
+        rc = rhs.Serialize(buffercache, right_node);
+        if (rc) return rc;
+        rc = b.Serialize(buffercache, node);
+        if (rc) return rc;
+        return ERROR_NOERROR;
+        break;
+    }
   case BTREE_INTERIOR_NODE:
     for (offset = 0; offset < b.info.numkeys; offset++)
     {
